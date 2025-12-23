@@ -65,6 +65,10 @@ class _DataBrowserState extends State<DataBrowser> {
                       selectedTableResult.columnNames.isNotEmpty)
                     Expanded(
                       child: TrinaGrid(
+                        configuration:
+                            Theme.brightnessOf(context) == Brightness.dark
+                            ? const TrinaGridConfiguration.dark()
+                            : const TrinaGridConfiguration(),
                         key: Key(selectedTable ?? "Empty"),
                         columns: selectedTableResult.columnNames.map((col) {
                           return TrinaColumn(

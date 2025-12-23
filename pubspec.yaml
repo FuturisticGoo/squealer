@@ -51,6 +51,7 @@ dependencies:
   equatable: ^2.0.7
   two_dimensional_scrollables: ^0.3.7
   trina_grid: ^2.0.2
+  dynamic_color: ^1.8.1
 
 dev_dependencies:
   flutter_test:

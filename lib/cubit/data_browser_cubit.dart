@@ -66,6 +66,8 @@ class DataBrowserCubit extends Cubit<DataBrowserState> {
   Future<void> showDataOfRelation({
     required String relationName,
     int? fromRowNumber,
+    String? orderBy,
+    bool? isDescendingOrder,
   }) async {
     if (state case DataBrowserLoaded(
       :final databaseObject,
@@ -77,6 +79,8 @@ class DataBrowserCubit extends Cubit<DataBrowserState> {
         relationName: relationName,
         fromRowNumber: fromRowNumber,
         limitRows: fetchCount,
+        orderBy: orderBy,
+        isDescendingOrder: isDescendingOrder,
       );
       switch (dataQueryResult) {
         case Left(value: final error):

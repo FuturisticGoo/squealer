@@ -12,7 +12,6 @@ class DataBrowser extends StatefulWidget {
 }
 
 class _DataBrowserState extends State<DataBrowser> {
-
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -27,10 +26,7 @@ class _DataBrowserState extends State<DataBrowser> {
                   children: [CircularProgressIndicator(), Text("Loading data")],
                 ),
               );
-            case DataBrowserLoaded(
-              :final tables,
-              :final views,
-            ):
+            case DataBrowserLoaded(:final tables, :final views):
               return Column(
                 key: PageStorageKey(
                   "${SquealerRouter.viewerPage}/data_browser",
@@ -75,12 +71,23 @@ class _DataBrowserState extends State<DataBrowser> {
                           fetchWithSorting: true,
                           fetchWithFiltering: true,
                           fetch: (request) async {
+                            final String? sortColumn =
+                                request.sortColumn?.field;
+                            final bool? isDescending =
+                                switch (request.sortColumn?.sort) {
+                                  TrinaColumnSort.ascending => false,
+                                  TrinaColumnSort.descending => true,
+                                  TrinaColumnSort.none || null => null,
+                                };
+                            final lastRow = request.lastRow?.data as int?;
                             await context
                                 .read<DataBrowserCubit>()
                                 .showDataOfRelation(
                                   relationName: selectedRelation,
                                   fromRowNumber:
-                                      (request.lastRow?.data as int? ?? 0) + 1,
+                                      lastRow,
+                                  orderBy: sortColumn,
+                                  isDescendingOrder: isDescending,
                                 );
                             //TODO: is there a better way?? :(
                             if (context.mounted) {
@@ -133,6 +140,7 @@ class _DataBrowserState extends State<DataBrowser> {
                             type: TrinaColumnType.text(),
                           );
                         }).toList(),
+
                         noRowsWidget: Center(child: Text("Empty relation")),
                         // rows: [],
                       ),

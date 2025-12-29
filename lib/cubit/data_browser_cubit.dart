@@ -7,6 +7,8 @@ import 'package:squealer/data/viewer_repo.dart';
 
 part 'data_browser_state.dart';
 
+const fetchCount = 20;
+
 class DataBrowserCubit extends Cubit<DataBrowserState> {
   final ViewerRepo viewerRepo;
   DataBrowserCubit({required this.viewerRepo}) : super(DataBrowserInitial()) {
@@ -20,8 +22,6 @@ class DataBrowserCubit extends Cubit<DataBrowserState> {
           databaseObject: databaseObject,
           tables: [],
           views: [],
-          selectedTableResult: null,
-          selectedTable: null,
         ),
       );
     }
@@ -57,34 +57,39 @@ class DataBrowserCubit extends Cubit<DataBrowserState> {
           databaseObject: databaseObject,
           tables: tables,
           views: views,
-          selectedTableResult: null,
-          selectedTable: null,
+
         ),
       );
     }
   }
 
-  Future<void> showDataOfTableOrView({required String tableName}) async {
+  Future<void> showDataOfRelation({
+    required String relationName,
+    int? fromRowNumber,
+  }) async {
     if (state case DataBrowserLoaded(
       :final databaseObject,
       :final tables,
       :final views,
     )) {
-      final dataQueryResult = await viewerRepo.getRowsOfTable(
+      final dataQueryResult = await viewerRepo.getRowsOfRelation(
         databaseObject: databaseObject,
-        tableName: tableName,
+        relationName: relationName,
+        fromRowNumber: fromRowNumber,
+        limitRows: fetchCount,
       );
       switch (dataQueryResult) {
         case Left(value: final error):
           emit(DataBrowserError(error: error));
-        case Right(value: final dataQuery):
+        case Right(value: final dataQueryResult):
           emit(
-            DataBrowserLoaded(
+            DataBrowserLoadedRelation(
               databaseObject: databaseObject,
               tables: tables,
               views: views,
-              selectedTableResult: dataQuery,
-              selectedTable: tableName,
+              selectedRelationResult: dataQueryResult,
+              selectedRelation: relationName,
+              isLast: dataQueryResult.rows.length < fetchCount,
             ),
           );
       }

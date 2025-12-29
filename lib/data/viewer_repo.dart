@@ -25,14 +25,14 @@ abstract class ViewerRepo {
     required String viewName,
   });
 
-  Future<Either<Failure, DatabaseQueryResult>> getRowsOfTable({
+  Future<Either<Failure, DatabaseQueryResult>> getRowsOfRelation({
     required DatabaseObject databaseObject,
-    required String tableName,
+    required String relationName,
     List<String>? columnsToSelect,
     String? orderBy,
     bool? isDescendingOrder,
-    int? fromRowId,
-    int? toRowId,
+    int? fromRowNumber,
+    int? limitRows,
   });
 
   Future<Either<Failure, DatabaseQueryResult>> executeRawQuery({

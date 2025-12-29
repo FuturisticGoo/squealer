@@ -12,6 +12,7 @@ class DataBrowser extends StatefulWidget {
 }
 
 class _DataBrowserState extends State<DataBrowser> {
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -29,8 +30,6 @@ class _DataBrowserState extends State<DataBrowser> {
             case DataBrowserLoaded(
               :final tables,
               :final views,
-              :final selectedTableResult,
-              :final selectedTable,
             ):
               return Column(
                 key: PageStorageKey(
@@ -44,7 +43,7 @@ class _DataBrowserState extends State<DataBrowser> {
                         child: DropdownButtonFormField(
                           decoration: InputDecoration(
                             border: OutlineInputBorder(),
-                            label: Text("Table: "),
+                            label: Text("Relation: "),
                           ),
                           items: [...tables, ...views].map((e) {
                             return DropdownMenuItem(value: e, child: Text(e));
@@ -53,7 +52,10 @@ class _DataBrowserState extends State<DataBrowser> {
                             if (value != null) {
                               await context
                                   .read<DataBrowserCubit>()
-                                  .showDataOfTableOrView(tableName: value);
+                                  .showDataOfRelation(
+                                    relationName: value,
+                                    fromRowNumber: 1,
+                                  );
                             }
                           },
                         ),
@@ -61,39 +63,82 @@ class _DataBrowserState extends State<DataBrowser> {
                     ],
                   ),
                   SizedBox(height: 20),
-                  if (selectedTableResult != null &&
-                      selectedTableResult.columnNames.isNotEmpty)
+                  if (state case DataBrowserLoadedRelation(
+                    :final selectedRelationResult,
+                    :final selectedRelation,
+                    :final isLast,
+                  ))
                     Expanded(
                       child: TrinaGrid(
+                        createFooter: (s) => TrinaInfinityScrollRows(
+                          initialFetch: true,
+                          fetchWithSorting: true,
+                          fetchWithFiltering: true,
+                          fetch: (request) async {
+                            await context
+                                .read<DataBrowserCubit>()
+                                .showDataOfRelation(
+                                  relationName: selectedRelation,
+                                  fromRowNumber:
+                                      (request.lastRow?.data as int? ?? 0) + 1,
+                                );
+                            //TODO: is there a better way?? :(
+                            if (context.mounted) {
+                              final latestState = context
+                                  .read<DataBrowserCubit>()
+                                  .state;
+                              if (latestState case DataBrowserLoadedRelation(
+                                :final selectedRelationResult,
+                              )) {
+                                return TrinaInfinityScrollRowsResponse(
+                                  isLast: isLast,
+                                  rows: selectedRelationResult.rows.map((row) {
+                                    return TrinaRow(
+                                      data: row.rowNumber,
+                                      cells: Map.fromEntries(
+                                        List.generate(row.rowData.length, (
+                                          index,
+                                        ) {
+                                          return MapEntry(
+                                            selectedRelationResult
+                                                .columnNames[index],
+                                            TrinaCell(
+                                              value: row.rowData[index],
+                                            ),
+                                          );
+                                        }),
+                                      ),
+                                    );
+                                  }).toList(),
+                                );
+                              }
+                            }
+                            return TrinaInfinityScrollRowsResponse(
+                              isLast: true,
+                              rows: [],
+                            );
+                          },
+                          stateManager: s,
+                        ),
+                        rows: [],
                         configuration:
                             Theme.brightnessOf(context) == Brightness.dark
                             ? const TrinaGridConfiguration.dark()
                             : const TrinaGridConfiguration(),
-                        key: Key(selectedTable ?? "Empty"),
-                        columns: selectedTableResult.columnNames.map((col) {
+                        key: Key(selectedRelation),
+                        columns: selectedRelationResult.columnNames.map((col) {
                           return TrinaColumn(
                             title: col,
                             field: col,
                             type: TrinaColumnType.text(),
                           );
                         }).toList(),
-                        noRowsWidget: Center(child: Text("Empty table")),
-                        rows: selectedTableResult.rows.map((row) {
-                          return TrinaRow(
-                            cells: Map.fromEntries(
-                              List.generate(row.rowData.length, (index) {
-                                return MapEntry(
-                                  selectedTableResult.columnNames[index],
-                                  TrinaCell(value: row.rowData[index]),
-                                );
-                              }),
-                            ),
-                          );
-                        }).toList(),
+                        noRowsWidget: Center(child: Text("Empty relation")),
+                        // rows: [],
                       ),
                     ),
-                  if (selectedTableResult == null)
-                    Center(child: Text("No table selected")),
+                  if (state is! DataBrowserLoadedRelation)
+                    Center(child: Text("No relation selected")),
                 ],
               );
             case DataBrowserError(:final error):

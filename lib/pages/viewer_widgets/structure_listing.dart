@@ -2,7 +2,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:squealer/core/entities/database_data_entities.dart';
-import 'package:squealer/core/routes.dart';
 import 'package:squealer/cubit/structure_listing_cubit.dart';
 
 class StructureListing extends StatelessWidget {

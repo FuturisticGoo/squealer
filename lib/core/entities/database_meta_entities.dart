@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:sqflite/sqflite.dart';
+import 'package:sqlite_async/sqlite_async.dart';
 
 sealed class DatabaseInfo extends Equatable {
   final Uri databaseUri;
@@ -16,9 +16,9 @@ sealed class DatabaseObject with EquatableMixin {
   const DatabaseObject();
 }
 
-class SQLiteDatabaseObject extends DatabaseObject {
-  final Database db;
-  const SQLiteDatabaseObject({required this.db});
+class SQLite3AsyncDatabaseObject extends DatabaseObject {
+  final SqliteDatabase db;
+  const SQLite3AsyncDatabaseObject({required this.db});
   @override
   List<Object?> get props => [db];
 }

@@ -58,9 +58,9 @@ class TableColumn extends Equatable {
 }
 
 class TableRow extends Equatable {
-  final String rowId;
+  final int rowNumber;
   final List<Object?> rowData;
-  const TableRow({required this.rowId, required this.rowData});
+  const TableRow({required this.rowNumber, required this.rowData});
   @override
-  List<Object?> get props => [rowId, rowData];
+  List<Object?> get props => [rowNumber, rowData];
 }

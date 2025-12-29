@@ -1,15 +1,16 @@
 import 'package:fpdart/fpdart.dart';
-import 'package:sqflite/sqflite.dart';
 import 'package:sqlparser/sqlparser.dart' as sqlparser;
 import 'package:squealer/core/entities/database_meta_entities.dart';
 import 'package:squealer/core/entities/database_data_entities.dart';
 import 'package:squealer/core/entities/failure_success.dart';
 import 'package:squealer/data/viewer_repo.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart' as sqflite;
+// import 'package:sqflite_common_ffi/sqflite_ffi.dart' as sqflite;
+import 'package:sqlite_async/sqlite_async.dart';
 
 class SQLiteViewerRepo implements ViewerRepo {
-  final SQFliteSQLiteSource sQFliteSQLiteSource;
-  const SQLiteViewerRepo({required this.sQFliteSQLiteSource});
+  // final SQFliteSQLiteSource sQFliteSQLiteSource;
+  final SQLite3AsyncSQLiteSource sqLite3AsyncSQLiteSource;
+  const SQLiteViewerRepo({required this.sqLite3AsyncSQLiteSource});
   @override
   Future<Either<Failure, DatabaseObject>> openDatabase({
     required DatabaseInfo databaseInfo,
@@ -17,7 +18,7 @@ class SQLiteViewerRepo implements ViewerRepo {
     try {
       switch (databaseInfo) {
         case SQLiteDatabaseInfo(:final databaseUri):
-          final dbObject = await sQFliteSQLiteSource.openDatabase(
+          final dbObject = await sqLite3AsyncSQLiteSource.openDatabase(
             dbPath: databaseUri.toFilePath(),
           );
           return Either.right(dbObject);
@@ -35,8 +36,8 @@ class SQLiteViewerRepo implements ViewerRepo {
   }) async {
     try {
       switch (databaseObject) {
-        case SQLiteDatabaseObject(:final db):
-          await sQFliteSQLiteSource.closeDatabase(db: db);
+        case SQLite3AsyncDatabaseObject(:final db):
+          await sqLite3AsyncSQLiteSource.closeDatabase(db: db);
           return Either.right(Success());
         default:
           throw UnimplementedError("Invalid database for sqlite");
@@ -52,8 +53,10 @@ class SQLiteViewerRepo implements ViewerRepo {
   }) async {
     try {
       switch (databaseObject) {
-        case SQLiteDatabaseObject(:final db):
-          final tableNames = await sQFliteSQLiteSource.listTableNames(db: db);
+        case SQLite3AsyncDatabaseObject(:final db):
+          final tableNames = await sqLite3AsyncSQLiteSource.listTableNames(
+            db: db,
+          );
           return Either.right(tableNames);
         default:
           throw UnimplementedError("Invalid database for sqlite");
@@ -70,8 +73,8 @@ class SQLiteViewerRepo implements ViewerRepo {
   }) async {
     try {
       switch (databaseObject) {
-        case SQLiteDatabaseObject(:final db):
-          final tableInfo = await sQFliteSQLiteSource.getTableInfo(
+        case SQLite3AsyncDatabaseObject(:final db):
+          final tableInfo = await sqLite3AsyncSQLiteSource.getTableInfo(
             db: db,
             tableName: tableName,
           );
@@ -94,8 +97,10 @@ class SQLiteViewerRepo implements ViewerRepo {
   }) async {
     try {
       switch (databaseObject) {
-        case SQLiteDatabaseObject(:final db):
-          final viewNames = await sQFliteSQLiteSource.listViewNames(db: db);
+        case SQLite3AsyncDatabaseObject(:final db):
+          final viewNames = await sqLite3AsyncSQLiteSource.listViewNames(
+            db: db,
+          );
           return Either.right(viewNames);
         default:
           throw UnimplementedError("Invalid database for sqlite");
@@ -112,8 +117,8 @@ class SQLiteViewerRepo implements ViewerRepo {
   }) async {
     try {
       switch (databaseObject) {
-        case SQLiteDatabaseObject(:final db):
-          final viewInfo = await sQFliteSQLiteSource.getViewInfo(
+        case SQLite3AsyncDatabaseObject(:final db):
+          final viewInfo = await sqLite3AsyncSQLiteSource.getViewInfo(
             db: db,
             viewName: viewName,
           );
@@ -129,24 +134,24 @@ class SQLiteViewerRepo implements ViewerRepo {
   }
 
   @override
-  Future<Either<Failure, DatabaseQueryResult>> getRowsOfTable({
+  Future<Either<Failure, DatabaseQueryResult>> getRowsOfRelation({
     required DatabaseObject databaseObject,
-    required String tableName,
+    required String relationName,
     List<String>? columnsToSelect,
     String? orderBy,
     bool? isDescendingOrder,
-    int? fromRowId,
-    int? toRowId,
+    int? fromRowNumber,
+    int? limitRows,
   }) async {
     try {
       switch (databaseObject) {
-        case SQLiteDatabaseObject(:final db):
-          final queryResult = await sQFliteSQLiteSource.getRowsOfTable(
+        case SQLite3AsyncDatabaseObject(:final db):
+          final queryResult = await sqLite3AsyncSQLiteSource.getRowsOfRelation(
             db: db,
-            tableName: tableName,
+            relationName: relationName,
             columnsToSelect: columnsToSelect,
-            fromRowId: fromRowId,
-            toRowId: toRowId,
+            fromRowNumber: fromRowNumber,
+            limitRows: limitRows,
             orderBy: orderBy,
             isDescendingOrder: isDescendingOrder,
           );
@@ -154,7 +159,7 @@ class SQLiteViewerRepo implements ViewerRepo {
         default:
           throw UnimplementedError("Invalid database for sqlite");
       }
-    } catch (error) {
+    } catch (error, stackTrace) {
       return Either.left(DatabaseOpenFailure(error: error));
     }
   }
@@ -166,8 +171,8 @@ class SQLiteViewerRepo implements ViewerRepo {
   }) async {
     try {
       switch (databaseObject) {
-        case SQLiteDatabaseObject(:final db):
-          final queryResult = await sQFliteSQLiteSource.executeRawQuery(
+        case SQLite3AsyncDatabaseObject(:final db):
+          final queryResult = await sqLite3AsyncSQLiteSource.executeRawQuery(
             db: db,
             query: query,
           );
@@ -181,21 +186,23 @@ class SQLiteViewerRepo implements ViewerRepo {
   }
 }
 
-class SQFliteSQLiteSource {
+class SQLite3AsyncSQLiteSource {
   final sqlparser.SqlEngine sqlEngine;
-  const SQFliteSQLiteSource({required this.sqlEngine});
+  const SQLite3AsyncSQLiteSource({required this.sqlEngine});
 
-  Future<DatabaseObject> openDatabase({required String dbPath}) async {
-    final db = await sqflite.openDatabase(dbPath);
-    return SQLiteDatabaseObject(db: db);
+  Future<SQLite3AsyncDatabaseObject> openDatabase({
+    required String dbPath,
+  }) async {
+    final db = SqliteDatabase(path: dbPath);
+    return SQLite3AsyncDatabaseObject(db: db);
   }
 
-  Future<void> closeDatabase({required Database db}) async {
+  Future<void> closeDatabase({required SqliteDatabase db}) async {
     await db.close();
   }
 
-  Future<List<String>> listTableNames({required Database db}) async {
-    final tablesResult = await db.rawQuery(""" 
+  Future<List<String>> listTableNames({required SqliteDatabase db}) async {
+    final tablesResult = await db.getAll(""" 
 SELECT 
   name 
 FROM 
@@ -203,14 +210,14 @@ FROM
 WHERE 
   type='table';
     """);
-    return tablesResult.map((e) => e["name"] as String).toList();
+    return tablesResult.map((row) => row["name"] as String).toList();
   }
 
   Future<DatabaseTable> getTableInfo({
-    required Database db,
+    required SqliteDatabase db,
     required String tableName,
   }) async {
-    final tableInfoResult = await db.rawQuery(
+    final tableInfoResult = await db.getAll(
       """ 
 SELECT 
   sql
@@ -262,8 +269,8 @@ AND
     }
   }
 
-  Future<List<String>> listViewNames({required Database db}) async {
-    final viewsResult = await db.rawQuery(""" 
+  Future<List<String>> listViewNames({required SqliteDatabase db}) async {
+    final viewsResult = await db.getAll(""" 
 SELECT
   name
 FROM
@@ -271,14 +278,14 @@ FROM
 WHERE
   type='view'
     """);
-    return viewsResult.map((e) => e["name"] as String).toList();
+    return viewsResult.map((row) => row["name"] as String).toList();
   }
 
   Future<DatabaseView> getViewInfo({
-    required Database db,
+    required SqliteDatabase db,
     required String viewName,
   }) async {
-    final tableInfoResult = await db.rawQuery(
+    final tableInfoResult = await db.getAll(
       """ 
 SELECT 
   sql
@@ -298,83 +305,82 @@ AND
     return DatabaseView(viewName: viewName, sql: createViewQuery);
   }
 
-  Future<List<String>> _getColumnsOfTable({
-    required Database db,
-    required String tableName,
-  }) async {
-    final tableInfo = await getTableInfo(db: db, tableName: tableName);
-    return tableInfo.columns.map((e) => e.columnName).toList();
-  }
-
-  Future<DatabaseQueryResult> getRowsOfTable({
-    required Database db,
-    required String tableName,
+  Future<DatabaseQueryResult> getRowsOfRelation({
+    required SqliteDatabase db,
+    required String relationName,
     List<String>? columnsToSelect,
     String? orderBy,
     bool? isDescendingOrder,
-    int? fromRowId,
-    int? toRowId,
+    int? fromRowNumber,
+    int? limitRows,
   }) async {
-    final privateRenamedRowId = "_private_renamed_row_id"; // rowid doesn't
-    // show up if another column is primary key, so use this to force
-    // the row id to show up
+    final privateRowNumber = "_private_row_number"; // Using this as the row
+    // number column name
+
     final queryBuilder = StringBuffer();
+    queryBuilder.writeln("SELECT * FROM ("); // The paranthesis is intentional
+
     queryBuilder.writeln("SELECT");
     // If columnToSelect is null, it means SELECT *, ie all columns
-    columnsToSelect ??= await _getColumnsOfTable(db: db, tableName: tableName);
+    columnsToSelect ??= ["*"];
     for (final column in columnsToSelect) {
       queryBuilder.write("$column, ");
     }
-    queryBuilder.writeln("rowid as $privateRenamedRowId");
+    queryBuilder.writeln("ROW_NUMBER() OVER() AS $privateRowNumber");
 
-    queryBuilder.writeln('FROM "$tableName"'); // No, it doesn't matter that
+    queryBuilder.writeln('FROM "$relationName"'); // No, it doesn't matter that
     // it's vulnerable to SQL injection, the user is using it on their own db
-
-    queryBuilder.writeln("WHERE");
-
-    if (fromRowId != null) {
-      queryBuilder.writeln(
-        "$privateRenamedRowId>=$fromRowId AND",
-      ); // This is not
-      // vulnerable to SQL injection, so no problem
-    }
-    if (toRowId != null) {
-      queryBuilder.writeln("$privateRenamedRowId<=$toRowId AND"); // Same here
-    }
-    queryBuilder.writeln("1=1"); // Default truthy condition for when there
-    // is no above conditions given.
 
     if (orderBy != null) {
       queryBuilder.write(
         'ORDER BY "$orderBy" ${isDescendingOrder == null ? "DESC" : "ASC"}',
       );
     }
-    final rowsResult = await db.rawQuery(queryBuilder.toString());
+
+    queryBuilder.writeln(" ) WHERE");
+
+    if (fromRowNumber != null) {
+      queryBuilder.writeln(
+        "$privateRowNumber>=$fromRowNumber AND",
+      ); // This is not
+      // vulnerable to SQL injection, so no problem
+      if (limitRows != null) {
+        queryBuilder.writeln(
+          "$privateRowNumber<${fromRowNumber + limitRows} AND",
+        ); // Same here
+      }
+    }
+    queryBuilder.writeln("1=1"); // Default truthy condition for when there
+    // is no above conditions given.
+    final rowsResult = await db.getAll(queryBuilder.toString());
+    // print(queryBuilder.toString());
     final processedRows = <TableRow>[];
+    final columnNames = rowsResult.columnNames;
     for (final row in rowsResult) {
       final TableRow currentRow;
       currentRow = TableRow(
-        rowId: (row[privateRenamedRowId] as int).toString(),
-        rowData: columnsToSelect.map((e) => row[e]).toList(),
+        rowNumber: row[privateRowNumber] as int,
+        rowData: columnNames.map((e) => row[e]).toList(),
       );
       processedRows.add(currentRow);
     }
     return DatabaseQueryResult(
-      columnNames: columnsToSelect,
+      columnNames: columnNames,
       rows: processedRows,
       originalQuery: queryBuilder.toString(),
     );
   }
 
   Future<DatabaseQueryResult> executeRawQuery({
-    required Database db,
+    required SqliteDatabase db,
     required String query,
   }) async {
-    final rawQueryResult = await db.rawQuery(query);
+    // TODO: do lazy query
+    final rawQueryResult = await db.getAll(query);
     final processedRows = <TableRow>[];
     for (final row in rawQueryResult) {
       final TableRow currentRow = TableRow(
-        rowId: (row["rowid"] as int).toString(),
+        rowNumber: row["rowid"] as int,
         rowData: row.entries
             .where((e) => e.key != "rowid")
             .map((e) => e.value)
@@ -383,17 +389,277 @@ AND
 
       processedRows.add(currentRow);
     }
-    final List<String> columnNames = [];
-
-    final firstRow = rawQueryResult.firstOrNull;
-    if (firstRow != null) {
-      columnNames.addAll(firstRow.keys.where((e) => e != "rowid"));
-    }
 
     return DatabaseQueryResult(
-      columnNames: columnNames,
+      columnNames: rawQueryResult.columnNames,
       rows: processedRows,
       originalQuery: query,
     );
   }
 }
+
+// class SQFliteSQLiteSource {
+//   final sqlparser.SqlEngine sqlEngine;
+//   const SQFliteSQLiteSource({required this.sqlEngine});
+
+//   Future<DatabaseObject> openDatabase({required String dbPath}) async {
+//     final db = await sqflite.openDatabase(dbPath);
+//     return SQLiteDatabaseObject(db: db);
+//   }
+
+//   Future<void> closeDatabase({required Database db}) async {
+//     await db.close();
+//   }
+
+//   Future<List<String>> listTableNames({required Database db}) async {
+//     final tablesResult = await db.rawQuery(""" 
+// SELECT 
+//   name 
+// FROM 
+//   sqlite_master 
+// WHERE 
+//   type='table';
+//     """);
+//     return tablesResult.map((e) => e["name"] as String).toList();
+//   }
+
+//   Future<DatabaseTable> getTableInfo({
+//     required Database db,
+//     required String tableName,
+//   }) async {
+//     final tableInfoResult = await db.rawQuery(
+//       """ 
+// SELECT 
+//   sql
+// FROM 
+//   sqlite_master 
+// WHERE 
+//   type='table'
+// AND
+//   name=?
+//     """,
+//       [tableName],
+//     );
+//     if (tableInfoResult.length != 1) {
+//       throw NotSingleTableError();
+//     }
+//     final createTableQuery = tableInfoResult.single["sql"] as String;
+//     final parsedAst = sqlEngine.parse(createTableQuery);
+//     if (parsedAst.rootNode case sqlparser.CreateTableStatement(
+//       :final childNodes,
+//       :final tableName,
+//     )) {
+//       final tableColumns = <TableColumn>[];
+//       for (final column in childNodes) {
+//         if (column case sqlparser.ColumnDefinition(
+//           :final columnName,
+//           :final typeName,
+//           :final isNonNullable,
+//           :final constraints,
+//         )) {
+//           final tableColumn = TableColumn(
+//             columnName: columnName,
+//             dataType: typeName ?? "UNKNOWN",
+//             notNullable: isNonNullable,
+//             isPrimaryKey: constraints
+//                 .whereType<sqlparser.PrimaryKeyColumn>()
+//                 .isNotEmpty,
+//             unique: constraints.whereType<sqlparser.UniqueColumn>().isNotEmpty,
+//           );
+//           tableColumns.add(tableColumn);
+//         }
+//       }
+//       return DatabaseTable(
+//         tableName: tableName,
+//         columns: tableColumns,
+//         sql: createTableQuery,
+//       );
+//     } else {
+//       throw InvalidSQLStatementError();
+//     }
+//   }
+
+//   Future<List<String>> listViewNames({required Database db}) async {
+//     final viewsResult = await db.rawQuery(""" 
+// SELECT
+//   name
+// FROM
+//   sqlite_master
+// WHERE
+//   type='view'
+//     """);
+//     return viewsResult.map((e) => e["name"] as String).toList();
+//   }
+
+//   Future<DatabaseView> getViewInfo({
+//     required Database db,
+//     required String viewName,
+//   }) async {
+//     final tableInfoResult = await db.rawQuery(
+//       """ 
+// SELECT 
+//   sql
+// FROM 
+//   sqlite_master 
+// WHERE 
+//   type='view'
+// AND
+//   name=?
+//     """,
+//       [viewName],
+//     );
+//     if (tableInfoResult.length != 1) {
+//       throw NotSingleViewError();
+//     }
+//     final createViewQuery = tableInfoResult.single["sql"] as String;
+//     return DatabaseView(viewName: viewName, sql: createViewQuery);
+//   }
+
+//   Future<List<String>> _getColumnsInStatement({required String sql}) async {
+//     final parsedAst = sqlEngine.parse(sql);
+//     switch (parsedAst.rootNode) {
+//       case sqlparser.CreateTableStatement(:final columns):
+//         return columns.map((e) => e.columnName).toList();
+//       case sqlparser.CreateViewStatement(:final childNodes):
+//         final firstSelectStmt = childNodes.firstWhere(
+//           (element) => element is sqlparser.SelectStatement,
+//         );
+//         return _getColumnsInStatement(sql: firstSelectStmt.toSql());
+//       case sqlparser.SelectStatement(:final columns):
+//         final columnNames = <String>[];
+//         for (final col in columns) {
+//           if (col case sqlparser.ExpressionResultColumn(
+//             :final expression,
+//             as: final asName,
+//           )) {
+//             if (expression case sqlparser.Reference(:final columnName)) {
+//               columnNames.add(asName ?? columnName);
+//             }
+//           }
+//         }
+//         return columnNames;
+//     }
+//     // TODO: fix correct errors and failure
+//     throw InvalidSQLStatementError();
+//   }
+
+//   Future<List<String>> _getColumnsOfRelation({
+//     required Database db,
+//     required String relationName,
+//   }) async {
+//     final relationInfoResult = await db.rawQuery(
+//       """ 
+// SELECT 
+//   sql
+// FROM 
+//   sqlite_master 
+// WHERE 
+//   ( type='view' OR type='table' )
+// AND
+//   name=?
+//     """,
+//       [relationName],
+//     );
+//     final sql = relationInfoResult.single["sql"] as String;
+//     return _getColumnsInStatement(sql: sql);
+//   }
+
+//   Future<DatabaseQueryResult> getRowsOfRelation({
+//     required Database db,
+//     required String relationName,
+//     List<String>? columnsToSelect,
+//     String? orderBy,
+//     bool? isDescendingOrder,
+//     int? fromRowNumber,
+//     int? limitRows,
+//   }) async {
+//     final privateRowNumber = "_private_row_number"; // Using this as the row
+//     // number column name
+
+//     final queryBuilder = StringBuffer();
+//     queryBuilder.writeln("SELECT * FROM ("); // The paranthesis is intentional
+
+//     queryBuilder.writeln("SELECT");
+//     // If columnToSelect is null, it means SELECT *, ie all columns
+//     columnsToSelect ??= await _getColumnsOfRelation(
+//       db: db,
+//       relationName: relationName,
+//     );
+//     for (final column in columnsToSelect) {
+//       queryBuilder.write("$column, ");
+//     }
+//     queryBuilder.writeln("ROW_NUMBER() OVER() AS $privateRowNumber");
+
+//     queryBuilder.writeln('FROM "$relationName"'); // No, it doesn't matter that
+//     // it's vulnerable to SQL injection, the user is using it on their own db
+
+//     if (orderBy != null) {
+//       queryBuilder.write(
+//         'ORDER BY "$orderBy" ${isDescendingOrder == null ? "DESC" : "ASC"}',
+//       );
+//     }
+
+//     queryBuilder.writeln(" ) WHERE");
+
+//     if (fromRowNumber != null) {
+//       queryBuilder.writeln(
+//         "$privateRowNumber>=$fromRowNumber AND",
+//       ); // This is not
+//       // vulnerable to SQL injection, so no problem
+//       if (limitRows != null) {
+//         queryBuilder.writeln(
+//           "$privateRowNumber<${fromRowNumber + limitRows} AND",
+//         ); // Same here
+//       }
+//     }
+//     queryBuilder.writeln("1=1"); // Default truthy condition for when there
+//     // is no above conditions given.
+//     final rowsResult = await db.rawQuery(queryBuilder.toString());
+//     // print(queryBuilder.toString());
+//     final processedRows = <TableRow>[];
+//     for (final row in rowsResult) {
+//       final TableRow currentRow;
+//       currentRow = TableRow(
+//         rowNumber: row[privateRowNumber] as int,
+//         rowData: columnsToSelect.map((e) => row[e]).toList(),
+//       );
+//       processedRows.add(currentRow);
+//     }
+//     return DatabaseQueryResult(
+//       columnNames: columnsToSelect,
+//       rows: processedRows,
+//       originalQuery: queryBuilder.toString(),
+//     );
+//   }
+
+//   Future<DatabaseQueryResult> executeRawQuery({
+//     required Database db,
+//     required String query,
+//   }) async {
+//     final rawQueryResult = await db.rawQuery(query);
+//     final processedRows = <TableRow>[];
+//     for (final row in rawQueryResult) {
+//       final TableRow currentRow = TableRow(
+//         rowNumber: row["rowid"] as int,
+//         rowData: row.entries
+//             .where((e) => e.key != "rowid")
+//             .map((e) => e.value)
+//             .toList(),
+//       );
+
+//       processedRows.add(currentRow);
+//     }
+//     final List<String> columnNames = [];
+
+//     final firstRow = rawQueryResult.firstOrNull;
+//     if (firstRow != null) {
+//       columnNames.addAll(firstRow.keys.where((e) => e != "rowid"));
+//     }
+
+//     return DatabaseQueryResult(
+//       columnNames: columnNames,
+//       rows: processedRows,
+//       originalQuery: query,
+//     );
+//   }
+// }

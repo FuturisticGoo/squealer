@@ -104,6 +104,25 @@ class _ViewerState extends State<Viewer> with TickerProviderStateMixin {
                           ],
                         ),
                       );
+                    case ViewerError(:final failure, :final stackTrace):
+                      return Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Text(
+                              "Error while opening database file",
+                              style: Theme.of(context).textTheme.bodyLarge
+                                  ?.copyWith(
+                                    color: Theme.of(context).colorScheme.error,
+                                  ),
+                            ),
+                            Text(failure.toString()),
+                            if (stackTrace != null)
+                              Text("StackTrace\n$stackTrace"),
+                          ],
+                        ),
+                      );
                     case ViewerDatabaseLoaded():
                       return Column(
                         children: [
@@ -130,8 +149,6 @@ class _ViewerState extends State<Viewer> with TickerProviderStateMixin {
                           ),
                         ],
                       );
-                    case ViewerError(:final error):
-                      return Center(child: ErrorWidget(error));
                   }
                 },
               );

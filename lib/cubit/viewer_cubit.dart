@@ -2,6 +2,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:squealer/core/entities/database_meta_entities.dart';
+import 'package:squealer/core/entities/failure_success.dart';
 import 'package:squealer/data/viewer_repo.dart';
 
 part 'viewer_state.dart';
@@ -19,8 +20,10 @@ class ViewerCubit extends Cubit<ViewerState> {
       databaseInfo: databaseInfo,
     );
     switch (dbOpenResult) {
-      case Left(value: final error):
-        emit(ViewerError(error: error));
+      case Left(value: GenericFailure(:final stackTrace)):
+        emit(ViewerError(failure: dbOpenResult.value, stackTrace: stackTrace));
+      case Left(:final value):
+        emit(ViewerError(failure: value));
       case Right(value: final databaseObject):
         emit(ViewerDatabaseLoaded(databaseObject: databaseObject));
     }

@@ -16,9 +16,9 @@ class ViewerDatabaseLoaded extends ViewerState with EquatableMixin {
 }
 
 class ViewerError extends ViewerState with EquatableMixin {
-  final Object error;
+  final Failure failure;
   final StackTrace? stackTrace;
-  const ViewerError({required this.error, this.stackTrace});
+  const ViewerError({required this.failure, this.stackTrace});
   @override
-  List<Object?> get props => [error, stackTrace];
+  List<Object?> get props => [failure, stackTrace];
 }

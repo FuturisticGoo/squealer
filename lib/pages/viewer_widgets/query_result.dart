@@ -55,9 +55,15 @@ class _QueryResultState extends State<QueryResult>
                         padding: const EdgeInsets.all(8.0),
                         child: IconButton(
                           onPressed: () async {
-                            await context.read<QueryResultCubit>().executeQuery(
-                              sqlQuery: _queryTextEditingController.text,
-                            );
+                            if (_queryTextEditingController.text
+                                .trim()
+                                .isNotEmpty) {
+                              await context
+                                  .read<QueryResultCubit>()
+                                  .executeQuery(
+                                    sqlQuery: _queryTextEditingController.text,
+                                  );
+                            }
                           },
                           icon: Icon(Icons.send),
                         ),

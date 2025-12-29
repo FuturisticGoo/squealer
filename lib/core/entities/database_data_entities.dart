@@ -3,11 +3,11 @@ import 'package:equatable/equatable.dart';
 class DatabaseQueryResult extends Equatable {
   final List<String> columnNames;
   final List<TableRow> rows;
-  final String? originalQuery;
+  final String originalQuery;
   const DatabaseQueryResult({
     required this.columnNames,
     required this.rows,
-    this.originalQuery,
+    required this.originalQuery,
   });
   @override
   List<Object?> get props => [columnNames, rows, originalQuery];

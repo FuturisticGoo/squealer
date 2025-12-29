@@ -3,9 +3,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:squealer/core/entities/database_meta_entities.dart';
 import 'package:squealer/core/init_setup.dart';
 import 'package:squealer/cubit/data_browser_cubit.dart';
+import 'package:squealer/cubit/query_result_cubit.dart';
 import 'package:squealer/cubit/structure_listing_cubit.dart';
 import 'package:squealer/cubit/viewer_cubit.dart';
 import 'package:squealer/pages/viewer_widgets/data_browser.dart';
+import 'package:squealer/pages/viewer_widgets/error_info_widget.dart';
+import 'package:squealer/pages/viewer_widgets/query_result.dart';
 import 'package:squealer/pages/viewer_widgets/structure_listing.dart';
 
 class Viewer extends StatefulWidget {
@@ -17,13 +20,13 @@ class Viewer extends StatefulWidget {
 }
 
 class _ViewerState extends State<Viewer> with TickerProviderStateMixin {
-  late final TabController tabController;
+  late final TabController _tabController;
   bool isTabControllerListenerRegistered = false;
   ViewerCubit? _viewerCubit;
   @override
   void initState() {
     super.initState();
-    tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
   }
 
   @override
@@ -44,6 +47,7 @@ class _ViewerState extends State<Viewer> with TickerProviderStateMixin {
           create: (context) => StructureListingCubit(viewerRepo: sl()),
         ),
         BlocProvider(create: (context) => DataBrowserCubit(viewerRepo: sl())),
+        BlocProvider(create: (context) => QueryResultCubit(viewerRepo: sl())),
       ],
       child: SafeArea(
         child: Scaffold(
@@ -56,34 +60,19 @@ class _ViewerState extends State<Viewer> with TickerProviderStateMixin {
                   databaseObject: databaseObject,
                 );
                 if (context.mounted) {
+                  await context.read<DataBrowserCubit>().databaseOpened(
+                    databaseObject: databaseObject,
+                  );
+                }
+                if (context.mounted) {
+                  await context.read<QueryResultCubit>().databaseOpened(
+                    databaseObject: databaseObject,
+                  );
+                }
+                if (context.mounted) {
                   await context
                       .read<StructureListingCubit>()
                       .loadTableAndViewNames();
-                }
-                if (!isTabControllerListenerRegistered) {
-                  isTabControllerListenerRegistered = true;
-                  tabController.addListener(() async {
-                    switch (tabController.index) {
-                      case 0:
-                        await context
-                            .read<StructureListingCubit>()
-                            .databaseOpened(databaseObject: databaseObject);
-                        if (context.mounted) {
-                          await context
-                              .read<StructureListingCubit>()
-                              .loadTableAndViewNames();
-                        }
-                      case 1:
-                        await context.read<DataBrowserCubit>().databaseOpened(
-                          databaseObject: databaseObject,
-                        );
-                        if (context.mounted) {
-                          await context
-                              .read<DataBrowserCubit>()
-                              .loadTableAndViewNames();
-                        }
-                    }
-                  });
                 }
               }
             },
@@ -104,43 +93,27 @@ class _ViewerState extends State<Viewer> with TickerProviderStateMixin {
                           ],
                         ),
                       );
-                    case ViewerError(:final failure, :final stackTrace):
-                      return Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Text(
-                              "Error while opening database file",
-                              style: Theme.of(context).textTheme.bodyLarge
-                                  ?.copyWith(
-                                    color: Theme.of(context).colorScheme.error,
-                                  ),
-                            ),
-                            Text(failure.toString()),
-                            if (stackTrace != null)
-                              Text("StackTrace\n$stackTrace"),
-                          ],
-                        ),
+                    case ViewerError(:final failure):
+                      return ErrorInfoWidget(
+                        errorText: "Error while opening database file",
+                        failure: failure,
                       );
                     case ViewerDatabaseLoaded():
                       return Column(
                         children: [
                           Expanded(
                             child: TabBarView(
-                              controller: tabController,
+                              controller: _tabController,
                               children: [
                                 StructureListing(),
                                 DataBrowser(),
-                                // ViewsListing(),
-                                Placeholder(
-                                  child: Center(child: Text("Query")),
+                                QueryResult(
                                 ),
                               ],
                             ),
                           ),
                           TabBar(
-                            controller: tabController,
+                            controller: _tabController,
                             tabs: [
                               Tab(text: "Structure"),
                               Tab(text: "Data"),

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:squealer/core/routes.dart';
 import 'package:squealer/cubit/data_browser_cubit.dart';
+import 'package:squealer/pages/viewer_widgets/loading_widget.dart';
 import 'package:trina_grid/trina_grid.dart';
 
 class DataBrowser extends StatefulWidget {
@@ -11,9 +11,20 @@ class DataBrowser extends StatefulWidget {
   State<DataBrowser> createState() => _DataBrowserState();
 }
 
-class _DataBrowserState extends State<DataBrowser> {
+class _DataBrowserState extends State<DataBrowser>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  void initState() {
+    super.initState();
+    context.read<DataBrowserCubit>().loadTableAndViewNames();
+  }
+
+  @override
+  bool get wantKeepAlive => true;
+
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: BlocBuilder<DataBrowserCubit, DataBrowserState>(
@@ -21,42 +32,29 @@ class _DataBrowserState extends State<DataBrowser> {
           switch (state) {
             case DataBrowserInitial():
             case DataBrowserLoading():
-              return Center(
-                child: Column(
-                  children: [CircularProgressIndicator(), Text("Loading data")],
-                ),
-              );
+              return LoadingWidget();
             case DataBrowserLoaded(:final tables, :final views):
               return Column(
-                key: PageStorageKey(
-                  "${SquealerRouter.viewerPage}/data_browser",
-                ),
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: DropdownButtonFormField(
-                          decoration: InputDecoration(
-                            border: OutlineInputBorder(),
-                            label: Text("Relation: "),
-                          ),
-                          items: [...tables, ...views].map((e) {
-                            return DropdownMenuItem(value: e, child: Text(e));
-                          }).toList(),
-                          onChanged: (value) async {
-                            if (value != null) {
-                              await context
-                                  .read<DataBrowserCubit>()
-                                  .showDataOfRelation(
-                                    relationName: value,
-                                    fromRowNumber: 1,
-                                  );
-                            }
-                          },
-                        ),
-                      ),
-                    ],
+                  DropdownButtonFormField(
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(),
+                      label: Text("Relation: "),
+                    ),
+                    items: [...tables, ...views].map((e) {
+                      return DropdownMenuItem(value: e, child: Text(e));
+                    }).toList(),
+                    onChanged: (value) async {
+                      if (value != null) {
+                        await context
+                            .read<DataBrowserCubit>()
+                            .showDataOfRelation(
+                              relationName: value,
+                              fromRowNumber: 1,
+                            );
+                      }
+                    },
                   ),
                   SizedBox(height: 20),
                   if (state case DataBrowserLoadedRelation(
@@ -84,8 +82,7 @@ class _DataBrowserState extends State<DataBrowser> {
                                 .read<DataBrowserCubit>()
                                 .showDataOfRelation(
                                   relationName: selectedRelation,
-                                  fromRowNumber:
-                                      lastRow,
+                                  fromRowNumber: lastRow,
                                   orderBy: sortColumn,
                                   isDescendingOrder: isDescending,
                                 );
@@ -132,7 +129,8 @@ class _DataBrowserState extends State<DataBrowser> {
                             Theme.brightnessOf(context) == Brightness.dark
                             ? const TrinaGridConfiguration.dark()
                             : const TrinaGridConfiguration(),
-                        key: Key(selectedRelation),
+                        key: Key(selectedRelation), // Required for TrinaGrid to
+                        // update on change
                         columns: selectedRelationResult.columnNames.map((col) {
                           return TrinaColumn(
                             title: col,

@@ -418,15 +418,13 @@ AND
     // TODO: do lazy query
     final rawQueryResult = await db.getAll(query);
     final processedRows = <TableRow>[];
+    int rowIdx = 0;
     for (final row in rawQueryResult) {
       final TableRow currentRow = TableRow(
-        rowNumber: row["rowid"] as int,
-        rowData: row.entries
-            .where((e) => e.key != "rowid")
-            .map((e) => e.value)
-            .toList(),
+        rowNumber: rowIdx,
+        rowData: row.values,
       );
-
+      rowIdx++;
       processedRows.add(currentRow);
     }
 

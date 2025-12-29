@@ -4,11 +4,21 @@ import 'package:flutter/material.dart';
 import 'package:squealer/core/entities/database_data_entities.dart';
 import 'package:squealer/cubit/structure_listing_cubit.dart';
 
-class StructureListing extends StatelessWidget {
+class StructureListing extends StatefulWidget {
   const StructureListing({super.key});
 
   @override
+  State<StructureListing> createState() => _StructureListingState();
+}
+
+class _StructureListingState extends State<StructureListing>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
   Widget build(BuildContext context) {
+    super.build(context);
     return BlocBuilder<StructureListingCubit, StructureListingState>(
       builder: (context, state) {
         switch (state) {

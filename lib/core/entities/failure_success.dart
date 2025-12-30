@@ -1,8 +1,8 @@
 class FileNotPickedError extends Error {}
 
-class NotSingleTableError extends Error {}
+class NoTableError extends Error {}
 
-class NotSingleViewError extends Error {}
+class NoViewError extends Error {}
 
 class InvalidSQLStatementError extends Error {}
 
@@ -36,10 +36,10 @@ class ViewNameListingFailure extends GenericFailure {
 
 class FileNotPickedFailure extends Failure {}
 
-class NotSingleTableFailure extends Failure {}
+class NoTableFailure extends Failure {}
 
 class InvalidSQLStatementFailure extends Failure {}
 
-class NotSingleViewFailure extends Failure {}
+class NoViewFailure extends Failure {}
 
 class Success {}

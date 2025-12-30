@@ -42,6 +42,7 @@ class _StructureListingState extends State<StructureListing>
             :final viewsExpanded,
           ):
             return SingleChildScrollView(
+              primary: true,
               child: Column(
                 children: [
                   ExpansionTile(
@@ -59,6 +60,7 @@ class _StructureListingState extends State<StructureListing>
                         Text("No tables")
                       else
                         ListView.builder(
+                          primary: false,
                           shrinkWrap: true,
                           itemCount: tables.length,
                           itemBuilder: (context, index) {
@@ -100,19 +102,22 @@ class _StructureListingState extends State<StructureListing>
                                               ListTile(
                                                 title: Text(col.dataType),
                                               ),
-                                              if (col.notNullable != null &&
-                                                  col.notNullable!)
+                                            if (col.notNullable)
                                                 ListTile(
                                                   title: Text("NOT NULL"),
                                                 ),
-                                              if (col.unique != null &&
-                                                  col.unique!)
+                                            if (col.unique)
                                                 ListTile(title: Text("UNIQUE")),
-                                              if (col.isPrimaryKey != null &&
-                                                  col.isPrimaryKey!)
+                                            if (col.isPrimaryKey)
                                                 ListTile(
                                                   title: Text("PRIMARY KEY"),
                                                 ),
+                                            if (col.defaultValue != null)
+                                              ListTile(
+                                                title: Text(
+                                                  "DEFAULT ${col.defaultValue}",
+                                                ),
+                                              ),
                                             ],
                                           );
                                         }),
@@ -139,6 +144,7 @@ class _StructureListingState extends State<StructureListing>
                         Text("No views")
                       else
                         ListView.builder(
+                          primary: false,
                           shrinkWrap: true,
                           itemCount: views.length,
                           itemBuilder: (context, index) {

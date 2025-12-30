@@ -37,15 +37,17 @@ class DatabaseView extends Equatable {
 class TableColumn extends Equatable {
   final String columnName;
   final String dataType;
-  final bool? notNullable;
-  final bool? unique;
-  final bool? isPrimaryKey;
+  final bool notNullable;
+  final bool unique;
+  final bool isPrimaryKey;
+  final dynamic defaultValue;
   const TableColumn({
     required this.columnName,
     required this.dataType,
-    this.notNullable,
-    this.unique,
-    this.isPrimaryKey,
+    required this.notNullable,
+    required this.unique,
+    required this.isPrimaryKey,
+    required this.defaultValue,
   });
   @override
   List<Object?> get props => [

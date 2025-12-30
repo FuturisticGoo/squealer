@@ -45,7 +45,6 @@ dependencies:
       ref: d87be499abef381832609802e65cdd8a3e34281d
   uri_file_reader: ^1.0.2
   fpdart: ^1.2.0
-  sqlparser: ^0.42.1
   equatable: ^2.0.7
   two_dimensional_scrollables: ^0.3.7
   trina_grid: ^2.0.2

@@ -1,5 +1,4 @@
 import 'package:get_it/get_it.dart';
-import 'package:sqlparser/sqlparser.dart';
 import 'package:squealer/core/constants.dart';
 import 'package:squealer/core/logging.dart';
 import 'package:squealer/data/file_picker_repo.dart';
@@ -27,8 +26,7 @@ Future<void> initSetup() async {
     ),
   );
 
-  sl.registerSingleton(SqlEngine());
-  sl.registerSingleton(SQLite3AsyncSQLiteSource(sqlEngine: sl()));
+  sl.registerSingleton(SQLite3AsyncSQLiteSource());
   sl.registerSingleton<ViewerRepo>(
     SQLiteViewerRepo(sqLite3AsyncSQLiteSource: sl()),
   );

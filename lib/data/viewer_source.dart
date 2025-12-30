@@ -1,5 +1,4 @@
 import 'package:fpdart/fpdart.dart';
-import 'package:sqlparser/sqlparser.dart' as sqlparser;
 import 'package:squealer/core/entities/database_meta_entities.dart';
 import 'package:squealer/core/entities/database_data_entities.dart';
 import 'package:squealer/core/entities/failure_success.dart';
@@ -90,13 +89,13 @@ class SQLiteViewerRepo implements ViewerRepo {
         default:
           throw UnimplementedError("Invalid database for sqlite");
       }
-    } on NotSingleTableError catch (error, stackTrace) {
+    } on NoTableError catch (error, stackTrace) {
       getLogger().severe(
         "Only one row expected, got unexpected length",
         error,
         stackTrace,
       );
-      return Either.left(NotSingleTableFailure());
+      return Either.left(NoTableFailure());
     } on InvalidSQLStatementError catch (error, stackTrace) {
       getLogger().severe(
         "Invalid SQL statement used in getTableInfo",
@@ -148,13 +147,13 @@ class SQLiteViewerRepo implements ViewerRepo {
         default:
           throw UnimplementedError("Invalid database for sqlite");
       }
-    } on NotSingleViewError catch (error, stackTrace) {
+    } on NoViewError catch (error, stackTrace) {
       getLogger().severe(
         "Only one row expected, got unexpected length",
         error,
         stackTrace,
       );
-      return Either.left(NotSingleViewFailure());
+      return Either.left(NoViewFailure());
     } catch (error, stackTrace) {
       getLogger().severe("Unknown error in getViewInfo", error, stackTrace);
       return Either.left(GenericFailure(error: error, stackTrace: stackTrace));
@@ -221,8 +220,7 @@ class SQLiteViewerRepo implements ViewerRepo {
 }
 
 class SQLite3AsyncSQLiteSource {
-  final sqlparser.SqlEngine sqlEngine;
-  const SQLite3AsyncSQLiteSource({required this.sqlEngine});
+  const SQLite3AsyncSQLiteSource();
 
   Future<SQLite3AsyncDatabaseObject> openDatabase({
     required String dbPath,
@@ -252,7 +250,37 @@ WHERE
     required SqliteDatabase db,
     required String tableName,
   }) async {
-    final tableInfoResult = await db.getAll(
+    final tableInfoResult = await db.getAll("PRAGMA table_info($tableName)");
+
+    if (tableInfoResult.isEmpty) {
+      throw NoTableError();
+    }
+
+    final indexListResult = await db.getAll("PRAGMA index_list($tableName)");
+    final uniqueIndexes = indexListResult.where((element) {
+      return element["unique"] == 1;
+    });
+    final uniqueColumns = <String>{};
+    for (final uniqueIndex in uniqueIndexes) {
+      final indexName = uniqueIndex["name"] as String;
+      final uniqueColumnResult = await db.get("PRAGMA index_info($indexName)");
+      uniqueColumns.add(uniqueColumnResult["name"]);
+    }
+
+    final tableColumns = <TableColumn>[];
+    for (final row in tableInfoResult) {
+      final tableColumn = TableColumn(
+        columnName: row["name"] as String,
+        dataType: row["type"] as String,
+        notNullable: row["notnull"] == 1,
+        isPrimaryKey: row["pk"] == 1,
+        unique: uniqueColumns.contains(row["name"] as String),
+        defaultValue: row["dflt_value"],
+      );
+      tableColumns.add(tableColumn);
+    }
+
+    final tableSchemaResult = await db.get(
       """ 
 SELECT 
   sql
@@ -265,43 +293,13 @@ AND
     """,
       [tableName],
     );
-    if (tableInfoResult.length != 1) {
-      throw NotSingleTableError();
-    }
-    final createTableQuery = tableInfoResult.single["sql"] as String;
-    final parsedAst = sqlEngine.parse(createTableQuery);
-    if (parsedAst.rootNode case sqlparser.CreateTableStatement(
-      :final childNodes,
-      :final tableName,
-    )) {
-      final tableColumns = <TableColumn>[];
-      for (final column in childNodes) {
-        if (column case sqlparser.ColumnDefinition(
-          :final columnName,
-          :final typeName,
-          :final isNonNullable,
-          :final constraints,
-        )) {
-          final tableColumn = TableColumn(
-            columnName: columnName,
-            dataType: typeName ?? "UNKNOWN",
-            notNullable: isNonNullable,
-            isPrimaryKey: constraints
-                .whereType<sqlparser.PrimaryKeyColumn>()
-                .isNotEmpty,
-            unique: constraints.whereType<sqlparser.UniqueColumn>().isNotEmpty,
-          );
-          tableColumns.add(tableColumn);
-        }
-      }
+
       return DatabaseTable(
         tableName: tableName,
         columns: tableColumns,
-        sql: createTableQuery,
+      sql: tableSchemaResult["sql"] as String,
       );
-    } else {
-      throw InvalidSQLStatementError();
-    }
+
   }
 
   Future<List<String>> listViewNames({required SqliteDatabase db}) async {
@@ -334,7 +332,7 @@ AND
       [viewName],
     );
     if (tableInfoResult.length != 1) {
-      throw NotSingleViewError();
+      throw NoViewError();
     }
     final createViewQuery = tableInfoResult.single["sql"] as String;
     return DatabaseView(viewName: viewName, sql: createViewQuery);

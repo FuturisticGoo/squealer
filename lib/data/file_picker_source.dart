@@ -2,14 +2,13 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:pick_or_save/pick_or_save.dart';
+import 'package:squealer/core/constants.dart';
 import 'package:squealer/core/entities/database_meta_entities.dart';
 import 'package:squealer/core/entities/failure_success.dart';
 
 abstract class FilePickerSource {
   Future<DatabaseInfo> pickDatabaseFile();
 }
-
-const _allowedExtension = ["sqlite", "db"];
 
 class NativeFilePicker extends FilePickerSource {
   @override
@@ -21,7 +20,7 @@ class NativeFilePicker extends FilePickerSource {
           getCachedFilePath: true,
           pickerType: PickerType.file,
           enableMultipleSelection: false,
-          allowedExtensions: _allowedExtension.map((e) => ".$e").toList(),
+          allowedExtensions: allowedExtension.map((e) => ".$e").toList(),
         ),
       );
       if (filePickerResult != null && filePickerResult.isNotEmpty) {
@@ -31,7 +30,7 @@ class NativeFilePicker extends FilePickerSource {
       final filePickerResult = await FilePicker.platform.pickFiles(
         allowMultiple: false,
         type: FileType.custom,
-        allowedExtensions: _allowedExtension,
+        allowedExtensions: allowedExtension,
         dialogTitle: "Pick SQLite database",
       );
       if (filePickerResult != null && filePickerResult.files.isNotEmpty) {
@@ -47,10 +46,10 @@ class NativeFilePicker extends FilePickerSource {
   }
 }
 
-class CustomFilePicker extends FilePickerSource {
-  @override
-  Future<DatabaseInfo> pickDatabaseFile() async {
-    // TODO: implement custom file picker UI
-    throw UnimplementedError();
+class CustomFilePicker {
+  Future<DatabaseInfo> getDatabaseInfoFromFilePath({
+    required String filePath,
+  }) async {
+    return SQLiteDatabaseInfo(databaseUri: Uri.file(filePath));
   }
 }

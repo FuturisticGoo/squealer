@@ -10,10 +10,21 @@ class HomeCubit extends Cubit<HomeState> {
     emit(HomeLoaded());
   }
 
-  Future<void> pickDatabaseFile({bool androidUseCustomPicker = false}) async {
+  Future<void> getDatabaseFromFilePath({required String path}) async {
+    emit(HomeLoading());
+    final filePickerResult = await filePickerRepository.getDatabaseFromFilePath(
+      filePath: path,
+    );
+    if (filePickerResult case Right(value: final databaseFile)) {
+      emit(HomeDatabaseFilePicked(databaseFile: databaseFile));
+    } else {
+      emit(HomeLoaded());
+    }
+  }
+
+  Future<void> pickDatabaseFile() async {
     emit(HomeLoading());
     final filePickerResult = await filePickerRepository.pickDatabaseFile(
-      androidUseCustomPicker: androidUseCustomPicker,
     );
     if (filePickerResult case Right(value: final databaseFile)) {
       emit(HomeDatabaseFilePicked(databaseFile: databaseFile));

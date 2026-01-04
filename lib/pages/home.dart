@@ -3,6 +3,9 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:io_file_picker_ui/io_file_picker_ui.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:squealer/core/constants.dart';
 import 'package:squealer/core/init_setup.dart';
 import 'package:squealer/core/routes.dart';
 import 'package:squealer/cubit/home_cubit.dart';
@@ -48,93 +51,47 @@ class _HomePageState extends State<HomePage> {
                             SwitchListTile(
                               title: Text("Use direct file access (Android)"),
                               value: shouldUseCustomFilePicker,
-                              onChanged: (value) {
-                                setState(() {
-                                  shouldUseCustomFilePicker = value;
-                                });
+                              onChanged: (value) async {
+                                final storagePermision = await Permission
+                                    .manageExternalStorage
+                                    .request();
+                                if (storagePermision.isGranted) {
+                                  setState(() {
+                                    shouldUseCustomFilePicker = value;
+                                  });
+                                }
                               },
                             ),
                             SizedBox(height: 20),
                           ],
                           FilledButton.icon(
                             onPressed: () async {
-                              await context.read<HomeCubit>().pickDatabaseFile(
-                                androidUseCustomPicker:
-                                    shouldUseCustomFilePicker,
-                              );
+                              if (shouldUseCustomFilePicker) {
+                                final databaseFileResult =
+                                    await showIoFilePicker(
+                                      context,
+                                      pickerConfig: SingleFilePickerConfig(
+                                        allowedExtensions: allowedExtension
+                                            .map((e) => ".$e")
+                                            .toList(),
+                                      ),
+                                    );
+                                if (databaseFileResult
+                                    case SingleFilePickerResult(:final filePath)
+                                    when context.mounted) {
+                                  await context
+                                      .read<HomeCubit>()
+                                      .getDatabaseFromFilePath(path: filePath);
+                                }
+                              } else {
+                                await context
+                                    .read<HomeCubit>()
+                                    .pickDatabaseFile();
+                              }
                             },
                             label: Text("Pick SQLite file"),
                             icon: Icon(Icons.file_open),
                           ),
-                          // OutlinedButton(
-                          //   onPressed: () async {
-                          //     final result = await FilePicker.platform.pickFiles(
-                          //       allowMultiple: false,
-                          //       allowedExtensions: ["sqlite", "db"],
-                          //       type: FileType.custom,
-                          //     );
-                          //     if (result != null) {
-                          //       setState(() {
-                          //         filePath = result.files.first.path ?? "No path";
-                          //       });
-                          //     }
-                          //   },
-                          //   child: Text("Open SQLite SAF"),
-                          // ),
-                          // FilledButton.icon(
-                          //   onPressed: () async {
-                          //     final status = await Permission.manageExternalStorage
-                          //         .request();
-                          //     if (status.isGranted) {
-                          //       final pickerResult = await PickOrSave().filePicker(
-                          //         params: FilePickerParams(
-                          //           getCachedFilePath: false,
-                          //           enableMultipleSelection: false,
-                          //           localOnly: true,
-                          //           allowedExtensions: [".sqlite", ".db"],
-                          //           pickerType: PickerType.file,
-                          //         ),
-                          //       );
-                          //       if (pickerResult != null && pickerResult.isNotEmpty) {
-                          //         final filePathResult = await UriFileReader.instance
-                          //             .getFileInfoFromUri(pickerResult.first);
-
-                          //         print(
-                          //           "${filePathResult?.fileName} ${filePathResult?.path}",
-                          //         );
-                          //         if (filePathResult != null &&
-                          //             filePathResult.path != null) {
-                          //           setState(() {
-                          //             filePath = filePathResult.path!;
-                          //           });
-                          //         }
-                          //       }
-                          //     }
-                          //   },
-                          //   label: Text("Open SQLite native"),
-                          //   icon: Icon(Icons.file_open),
-                          // ),
-                          // SizedBox(
-                          //   height: 300,
-                          //   child: SingleChildScrollView(child: Text(filePath)),
-                          // ),
-                          // TextField(controller: controller),
-                          // OutlinedButton(
-                          //   onPressed: () async {
-                          //     final command = controller.text.split(" ");
-
-                          //     final pOut = await Process.run(
-                          //       command.first,
-                          //       command.sublist(1),
-                          //       // runInShell: true,
-                          //     );
-                          //     print(pOut.stderr);
-                          //     setState(() {
-                          //       filePath = pOut.stdout.toString();
-                          //     });
-                          //   },
-                          //   child: Text("Run command"),
-                          // ),
                         ],
                       ),
                     );

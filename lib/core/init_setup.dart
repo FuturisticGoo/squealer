@@ -14,7 +14,7 @@ Future<void> initSetup() async {
     NativeFilePicker(),
     instanceName: nativeFilePickerInstance,
   );
-  sl.registerSingleton<FilePickerSource>(
+  sl.registerSingleton<CustomFilePicker>(
     CustomFilePicker(),
     instanceName: customFilePickerInstance,
   );

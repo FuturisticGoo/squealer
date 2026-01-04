@@ -232,6 +232,13 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.20.2"
+  io_file_picker_ui:
+    dependency: "direct main"
+    description:
+      path: "../../io_file_picker_ui"
+      relative: true
+    source: path
+    version: "0.0.1"
   leak_tracker:
     dependency: transitive
     description:

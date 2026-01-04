@@ -52,7 +52,8 @@ dependencies:
   sqlite_async: ^0.13.0
   sqlite3_flutter_libs: ^0.5.41
   logging: ^1.3.0
-
+  io_file_picker_ui:
+    path: ../../io_file_picker_ui
 dev_dependencies:
   flutter_test:
     sdk: flutter

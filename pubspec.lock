@@ -235,9 +235,11 @@ packages:
   io_file_picker_ui:
     dependency: "direct main"
     description:
-      path: "../../io_file_picker_ui"
-      relative: true
-    source: path
+      path: "."
+      ref: HEAD
+      resolved-ref: "7b9209b5f2d4fc77834206be361ec22d35f7de34"
+      url: "https://github.com/FuturisticGoo/io_file_picker_ui"
+    source: git
     version: "0.0.1"
   leak_tracker:
     dependency: transitive

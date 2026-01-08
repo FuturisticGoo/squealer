@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:futuristicgoo_utils/futuristicgoo_utils.dart';
 import 'package:go_router/go_router.dart';
@@ -6,6 +5,7 @@ import 'package:squealer/core/entities/database_meta_entities.dart';
 import 'package:squealer/cubit/global_settings_cubit.dart';
 import 'package:squealer/pages/first_time_or_update_page.dart';
 import 'package:squealer/pages/home.dart';
+import 'package:squealer/pages/settings_page.dart';
 import 'package:squealer/pages/viewer.dart';
 
 class SquealerRouter {
@@ -14,7 +14,6 @@ class SquealerRouter {
   static const viewerPage = "/viewer";
   static const settingsPage = "/settings";
   static final router = GoRouter(
-    
     initialLocation: firstTimeOrUpdatePage,
     redirect: (context, state) {
       final settingsState = context.read<GlobalSettingsCubit>().state;
@@ -49,7 +48,7 @@ class SquealerRouter {
       GoRoute(
         path: settingsPage,
         builder: (context, state) {
-          return Placeholder();
+          return SettingsPage();
         },
       ),
     ],

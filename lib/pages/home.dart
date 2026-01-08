@@ -30,7 +30,26 @@ class _HomePageState extends State<HomePage> {
       create: (context) => HomeCubit(filePickerRepository: sl()),
       child: SafeArea(
         child: Scaffold(
-          appBar: AppBar(title: Text("Squealer")),
+          appBar: AppBar(
+            title: Text("Squealer"),
+            actions: [
+              PopupMenuButton(
+                itemBuilder: (context) {
+                  return [
+                    PopupMenuItem(
+                      onTap: () {
+                        context.push(SquealerRouter.settingsPage);
+                      },
+                      child: ListTile(
+                        title: Text("Settings"),
+                        leading: Icon(Icons.settings),
+                      ),
+                    ),
+                  ];
+                },
+              ),
+            ],
+          ),
           body: BlocBuilder<GlobalSettingsCubit, GlobalSettingsState>(
             builder: (context, state) {
               switch (state) {

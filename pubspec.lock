@@ -203,9 +203,11 @@ packages:
   futuristicgoo_utils:
     dependency: "direct main"
     description:
-      path: "../../futuristicgoo_utils"
-      relative: true
-    source: path
+      path: "."
+      ref: HEAD
+      resolved-ref: "300e3c9c51ed2c479527c95594455e760d4f4f75"
+      url: "https://github.com/FuturisticGoo/futuristicgoo_flutter_utils"
+    source: git
     version: "0.0.1"
   get_it:
     dependency: "direct main"
@@ -679,5 +681,5 @@ packages:
     source: hosted
     version: "6.6.1"
 sdks:
-  dart: ">=3.9.2 <4.0.0"
+  dart: ">=3.10.4 <4.0.0"
   flutter: ">=3.35.0"

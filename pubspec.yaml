@@ -109,7 +109,3 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
-
-dependency_overrides:
-  futuristicgoo_utils:
-    path: ../../futuristicgoo_utils/

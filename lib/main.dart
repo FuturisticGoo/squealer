@@ -8,13 +8,12 @@ import 'package:squealer/cubit/global_settings_cubit.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initSetup();
-  runApp(const MyApp());
+  runApp(const SquealerApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class SquealerApp extends StatelessWidget {
+  const SquealerApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return DynamicColorBuilder(

@@ -1,0 +1,13 @@
+<b>A simple SQLite database viewer</b>
+
+Features:
+<ul>
+<li>View schema of tables and views.</li>
+<li>Show records from tables and views.</li>
+<li>Execute SQL queries</li>
+</ul>
+
+Currently, read-only queries are supported, write commands are not.
+
+Made using Flutter </br>
+Programmed with ♡

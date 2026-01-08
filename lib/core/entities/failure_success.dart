@@ -6,6 +6,10 @@ class NoViewError extends Error {}
 
 class InvalidSQLStatementError extends Error {}
 
+class NoSettingsFoundError extends Error {}
+
+class NoMetadataFoundError extends Error {}
+
 class Failure {
   const Failure();
   @override
@@ -17,6 +21,11 @@ class GenericFailure extends Failure {
   final StackTrace stackTrace;
   const GenericFailure({required this.error, required this.stackTrace});
 }
+
+
+class NoSettingsFoundFailure extends Failure {}
+
+class NoMetadataFoundFailure extends Failure {}
 
 class DatabaseOpenFailure extends GenericFailure {
   const DatabaseOpenFailure({required super.error, required super.stackTrace});

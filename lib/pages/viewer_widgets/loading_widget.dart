@@ -10,6 +10,7 @@ class LoadingWidget extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
+        spacing: 10,
         children: [CircularProgressIndicator(), Text(loadingText)],
       ),
     );

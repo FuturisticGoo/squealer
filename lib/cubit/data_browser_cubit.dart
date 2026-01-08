@@ -7,7 +7,6 @@ import 'package:squealer/data/viewer_repo.dart';
 
 part 'data_browser_state.dart';
 
-const fetchCount = 20;
 
 class DataBrowserCubit extends Cubit<DataBrowserState> {
   final ViewerRepo viewerRepo;
@@ -68,6 +67,7 @@ class DataBrowserCubit extends Cubit<DataBrowserState> {
     int? fromRowNumber,
     String? orderBy,
     bool? isDescendingOrder,
+    required int fetchCount,
   }) async {
     if (state case DataBrowserLoaded(
       :final databaseObject,

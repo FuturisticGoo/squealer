@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:squealer/core/entities/database_data_entities.dart';
 import 'package:squealer/cubit/structure_listing_cubit.dart';
+import 'package:futuristicgoo_utils/futuristicgoo_utils.dart';
 
 class StructureListing extends StatefulWidget {
   const StructureListing({super.key});
@@ -87,41 +88,36 @@ class _StructureListingState extends State<StructureListing>
                               children:
                                   switch (tablesExpanded[currentTableName]) {
                                     null => [],
-                                    DatabaseTable(:final columns, :final sql) =>
-                                      [
-                                        SQLTile(sql: sql),
-                                        Divider(),
-                                        ...columns.map((col) {
-                                          return ExpansionTile(
-                                            title: Text(col.columnName),
-                                            childrenPadding: EdgeInsets.only(
-                                              left: 20,
-                                            ),
-                                            shape: const Border(),
-                                            children: [
-                                              ListTile(
-                                                title: Text(col.dataType),
-                                              ),
+                                    DatabaseTable(:final columns, :final sql) => [
+                                      SQLTile(sql: sql),
+                                      Divider(),
+                                      ...columns.map((col) {
+                                        return ExpansionTile(
+                                          title: Text(col.columnName),
+                                          childrenPadding: EdgeInsets.only(
+                                            left: 20,
+                                          ),
+                                          shape: const Border(),
+                                          children: [
+                                            ListTile(title: Text(col.dataType)),
                                             if (col.notNullable)
-                                                ListTile(
-                                                  title: Text("NOT NULL"),
-                                                ),
+                                              ListTile(title: Text("NOT NULL")),
                                             if (col.unique)
-                                                ListTile(title: Text("UNIQUE")),
+                                              ListTile(title: Text("UNIQUE")),
                                             if (col.isPrimaryKey)
-                                                ListTile(
-                                                  title: Text("PRIMARY KEY"),
-                                                ),
+                                              ListTile(
+                                                title: Text("PRIMARY KEY"),
+                                              ),
                                             if (col.defaultValue != null)
                                               ListTile(
                                                 title: Text(
                                                   "DEFAULT ${col.defaultValue}",
                                                 ),
                                               ),
-                                            ],
-                                          );
-                                        }),
-                                      ],
+                                          ],
+                                        );
+                                      }),
+                                    ],
                                   },
                             );
                           },
@@ -210,6 +206,9 @@ class SQLTile extends StatelessWidget {
       subtitle: Text(sql),
       onLongPress: () async {
         await Clipboard.setData(ClipboardData(text: sql));
+        if (context.mounted) {
+          showSnackBar(context, text: "Copied SQL");
+        }
       },
     );
   }

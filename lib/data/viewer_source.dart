@@ -1,8 +1,8 @@
 import 'package:fpdart/fpdart.dart';
+import 'package:futuristicgoo_utils/futuristicgoo_utils.dart';
 import 'package:squealer/core/entities/database_meta_entities.dart';
 import 'package:squealer/core/entities/database_data_entities.dart';
 import 'package:squealer/core/entities/failure_success.dart';
-import 'package:squealer/core/logging.dart';
 import 'package:squealer/data/viewer_repo.dart';
 import 'package:sqlite_async/sqlite_async.dart';
 
@@ -20,11 +20,13 @@ class SQLiteViewerRepo implements ViewerRepo {
             dbPath: databaseUri.toFilePath(),
           );
           return Either.right(dbObject);
-        default:
-          throw UnimplementedError("Invalid database for sqlite");
       }
     } catch (error, stackTrace) {
-      getLogger().severe("Error while opening database", error, stackTrace);
+      Loggify.getLogger?.severe(
+        "Error while opening database",
+        error,
+        stackTrace,
+      );
       return Either.left(
         DatabaseOpenFailure(error: error, stackTrace: stackTrace),
       );
@@ -40,11 +42,13 @@ class SQLiteViewerRepo implements ViewerRepo {
         case SQLite3AsyncDatabaseObject(:final db):
           await sqLite3AsyncSQLiteSource.closeDatabase(db: db);
           return Either.right(Success());
-        default:
-          throw UnimplementedError("Invalid database for sqlite");
       }
     } catch (error, stackTrace) {
-      getLogger().severe("Error while closing database", error, stackTrace);
+      Loggify.getLogger?.severe(
+        "Error while closing database",
+        error,
+        stackTrace,
+      );
       return Either.left(
         DatabaseCloseFailure(error: error, stackTrace: stackTrace),
       );
@@ -62,11 +66,13 @@ class SQLiteViewerRepo implements ViewerRepo {
             db: db,
           );
           return Either.right(tableNames);
-        default:
-          throw UnimplementedError("Invalid database for sqlite");
       }
     } catch (error, stackTrace) {
-      getLogger().severe("Error while listing table names", error, stackTrace);
+      Loggify.getLogger?.severe(
+        "Error while listing table names",
+        error,
+        stackTrace,
+      );
       return Either.left(
         TableNameListingFailure(error: error, stackTrace: stackTrace),
       );
@@ -86,25 +92,27 @@ class SQLiteViewerRepo implements ViewerRepo {
             tableName: tableName,
           );
           return Either.right(tableInfo);
-        default:
-          throw UnimplementedError("Invalid database for sqlite");
       }
     } on NoTableError catch (error, stackTrace) {
-      getLogger().severe(
+      Loggify.getLogger?.severe(
         "Only one row expected, got unexpected length",
         error,
         stackTrace,
       );
       return Either.left(NoTableFailure());
     } on InvalidSQLStatementError catch (error, stackTrace) {
-      getLogger().severe(
+      Loggify.getLogger?.severe(
         "Invalid SQL statement used in getTableInfo",
         error,
         stackTrace,
       );
       return Either.left(InvalidSQLStatementFailure());
     } catch (error, stackTrace) {
-      getLogger().severe("Unknown error in getTableInfo", error, stackTrace);
+      Loggify.getLogger?.severe(
+        "Unknown error in getTableInfo",
+        error,
+        stackTrace,
+      );
       return Either.left(GenericFailure(error: error, stackTrace: stackTrace));
     }
   }
@@ -120,11 +128,13 @@ class SQLiteViewerRepo implements ViewerRepo {
             db: db,
           );
           return Either.right(viewNames);
-        default:
-          throw UnimplementedError("Invalid database for sqlite");
       }
     } catch (error, stackTrace) {
-      getLogger().severe("Error while listing view names", error, stackTrace);
+      Loggify.getLogger?.severe(
+        "Error while listing view names",
+        error,
+        stackTrace,
+      );
       return Either.left(
         ViewNameListingFailure(error: error, stackTrace: stackTrace),
       );
@@ -144,18 +154,20 @@ class SQLiteViewerRepo implements ViewerRepo {
             viewName: viewName,
           );
           return Either.right(viewInfo);
-        default:
-          throw UnimplementedError("Invalid database for sqlite");
       }
     } on NoViewError catch (error, stackTrace) {
-      getLogger().severe(
+      Loggify.getLogger?.severe(
         "Only one row expected, got unexpected length",
         error,
         stackTrace,
       );
       return Either.left(NoViewFailure());
     } catch (error, stackTrace) {
-      getLogger().severe("Unknown error in getViewInfo", error, stackTrace);
+      Loggify.getLogger?.severe(
+        "Unknown error in getViewInfo",
+        error,
+        stackTrace,
+      );
       return Either.left(GenericFailure(error: error, stackTrace: stackTrace));
     }
   }
@@ -183,11 +195,9 @@ class SQLiteViewerRepo implements ViewerRepo {
             isDescendingOrder: isDescendingOrder,
           );
           return Either.right(queryResult);
-        default:
-          throw UnimplementedError("Invalid database for sqlite");
       }
     } catch (error, stackTrace) {
-      getLogger().severe(
+      Loggify.getLogger?.severe(
         "Unknown error in getRowsOfRelation",
         error,
         stackTrace,
@@ -209,11 +219,13 @@ class SQLiteViewerRepo implements ViewerRepo {
             query: query,
           );
           return Either.right(queryResult);
-        default:
-          throw UnimplementedError("Invalid database for sqlite");
       }
     } catch (error, stackTrace) {
-      getLogger().severe("Unknown error in executeRawQuery", error, stackTrace);
+      Loggify.getLogger?.severe(
+        "Unknown error in executeRawQuery",
+        error,
+        stackTrace,
+      );
       return Either.left(GenericFailure(error: error, stackTrace: stackTrace));
     }
   }

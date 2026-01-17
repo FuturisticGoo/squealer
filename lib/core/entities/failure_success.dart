@@ -10,6 +10,8 @@ class NoSettingsFoundError extends Error {}
 
 class NoMetadataFoundError extends Error {}
 
+class InvalidPathError extends Error {}
+
 class Failure {
   const Failure();
   @override
@@ -42,6 +44,9 @@ class TableNameListingFailure extends GenericFailure {
 class ViewNameListingFailure extends GenericFailure {
   ViewNameListingFailure({required super.error, required super.stackTrace});
 }
+class InvalidPathFailure extends GenericFailure {
+  InvalidPathFailure({required super.error, required super.stackTrace});
+}
 
 class FileNotPickedFailure extends Failure {}
 
@@ -50,5 +55,6 @@ class NoTableFailure extends Failure {}
 class InvalidSQLStatementFailure extends Failure {}
 
 class NoViewFailure extends Failure {}
+
 
 class Success {}

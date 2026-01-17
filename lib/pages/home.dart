@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:futuristicgoo_utils/futuristicgoo_utils.dart';
 import 'package:go_router/go_router.dart';
 import 'package:io_file_picker_ui/io_file_picker_ui.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -14,7 +15,8 @@ import 'package:squealer/pages/viewer_widgets/error_info_widget.dart';
 import 'package:squealer/pages/viewer_widgets/loading_widget.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  final Uri? databaseContentUri;
+  const HomePage({super.key, this.databaseContentUri});
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -24,10 +26,22 @@ class _HomePageState extends State<HomePage> {
   String filePath = "";
   final controller = TextEditingController();
   bool shouldUseCustomFilePicker = false;
+
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => HomeCubit(filePickerRepository: sl()),
+      create: (context) {
+        final homeCubit = HomeCubit(filePickerRepository: sl());
+        if (widget.databaseContentUri != null) {
+          Loggify.getLogger?.config(
+            "Handling ${widget.databaseContentUri} in while creating HomeCubit",
+          );
+          homeCubit.getDatabaseFromContentUri(
+            contentUri: widget.databaseContentUri!,
+          );
+        }
+        return homeCubit;
+      },
       child: SafeArea(
         child: Scaffold(
           appBar: AppBar(
@@ -66,7 +80,7 @@ class _HomePageState extends State<HomePage> {
                   return Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: BlocConsumer<HomeCubit, HomeState>(
-                      listener: (context, state) {
+                      listener: (context, state) async {
                         if (state case HomeDatabaseFilePicked(
                           :final databaseFile,
                         )) {

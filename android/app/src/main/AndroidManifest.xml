@@ -26,6 +26,31 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+            <!-- For receiving intent for opening sqlite files, works sometimes-->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="content"/>
+                <data android:host="*"/>
+                <data android:pathSuffix=".db"/>
+                <data android:pathSuffix=".sqlite"/>
+                <data android:pathSuffix=".sqlite-shm"/>
+                <data android:pathSuffix=".sqlite-wal"/>
+                <data android:pathPattern=".*\\.db"/>
+                <data android:pathPattern=".*\\.sqlite"/>
+                <data android:pathPattern=".*\\.sqlite-shm"/>
+                <data android:pathPattern=".*\\.sqlite-wal"/>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="content" android:mimeType="application/x-sqlite3"  />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="content" android:mimeType="application/vnd.sqlite3" />
+            </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
@@ -43,5 +68,21 @@
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
         </intent>
+        <!-- <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="content" android:host="*" android:pathPattern=".*\\.sqlite" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+ 		    <data android:scheme="content" android:host="*" android:pathPattern=".*\\.db" />   		
+        </intent> -->
+        <!-- <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:mimeType="application/x-sqlite3" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:mimeType="application/vnd.sqlite3" />
+        </intent> -->
     </queries>
 </manifest>

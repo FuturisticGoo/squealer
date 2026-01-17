@@ -13,8 +13,18 @@ class SquealerRouter {
   static const homePage = "/home";
   static const viewerPage = "/viewer";
   static const settingsPage = "/settings";
-  static final router = GoRouter(
+  static final GoRouter router = GoRouter(
     initialLocation: firstTimeOrUpdatePage,
+    onEnter: (context, currentState, nextState, goRouter) {
+      if (nextState.uri.scheme == "content") {
+        Loggify.getLogger?.config("Opening content URI: ${nextState.uri}");
+        goRouter.go(homePage, extra: nextState.uri);
+        return Block.stop();
+      } else {
+        Loggify.getLogger?.config("Not a content URI: ${nextState.uri}");
+        return Allow();
+      }
+    },
     redirect: (context, state) {
       final settingsState = context.read<GlobalSettingsCubit>().state;
       if (settingsState is GlobalSettingsFirstTime ||
@@ -30,24 +40,28 @@ class SquealerRouter {
       GoRoute(
         path: firstTimeOrUpdatePage,
         builder: (context, state) {
+          Loggify.getLogger?.fine("Going to FirstTimeOrUpdatePage");
           return FirstTimeOrUpdatePage();
         },
       ),
       GoRoute(
         path: homePage,
         builder: (context, state) {
-          return HomePage();
+          Loggify.getLogger?.fine("Going to HomePage(${state.extra})");
+          return HomePage(databaseContentUri: state.extra as Uri?);
         },
       ),
       GoRoute(
         path: viewerPage,
         builder: (context, state) {
+          Loggify.getLogger?.fine("Going to Viewer(${state.extra})");
           return Viewer(databaseInfo: state.extra as DatabaseInfo);
         },
       ),
       GoRoute(
         path: settingsPage,
         builder: (context, state) {
+          Loggify.getLogger?.fine("Going to SettingsPage");
           return SettingsPage();
         },
       ),

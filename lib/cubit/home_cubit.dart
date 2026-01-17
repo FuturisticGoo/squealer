@@ -10,6 +10,18 @@ class HomeCubit extends Cubit<HomeState> {
     emit(HomeLoaded());
   }
 
+  Future<void> getDatabaseFromContentUri({required Uri contentUri}) async {
+    emit(HomeLoading());
+    final filePickerResult = await filePickerRepository
+        .getDatabaseFromContentUri(contentUri: contentUri);
+    switch (filePickerResult) {
+      case Right(value: final databaseFile):
+        emit(HomeDatabaseFilePicked(databaseFile: databaseFile));
+      case Left():
+        emit(HomeLoaded());
+    }
+  }
+
   Future<void> getDatabaseFromFilePath({required String path}) async {
     emit(HomeLoading());
     final filePickerResult = await filePickerRepository.getDatabaseFromFilePath(
@@ -24,8 +36,7 @@ class HomeCubit extends Cubit<HomeState> {
 
   Future<void> pickDatabaseFile() async {
     emit(HomeLoading());
-    final filePickerResult = await filePickerRepository.pickDatabaseFile(
-    );
+    final filePickerResult = await filePickerRepository.pickDatabaseFile();
     if (filePickerResult case Right(value: final databaseFile)) {
       emit(HomeDatabaseFilePicked(databaseFile: databaseFile));
     } else {

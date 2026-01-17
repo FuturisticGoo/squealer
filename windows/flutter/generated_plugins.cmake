@@ -6,6 +6,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   dynamic_color
   permission_handler_windows
   sqlite3_flutter_libs
+  uri_content
 )
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST

@@ -10,6 +10,7 @@ import 'package:squealer/data/settings_source.dart';
 import 'package:squealer/data/viewer_repo.dart';
 import 'package:squealer/data/viewer_source.dart';
 import 'package:path/path.dart' as p;
+import 'package:uri_content/uri_content.dart';
 
 final sl = GetIt.instance;
 
@@ -23,7 +24,10 @@ Future<void> initSetup() async {
   final db = SqliteDatabase(path: dbPath);
 
   sl.registerSingleton<FilePickerSource>(NativeFilePicker());
-  sl.registerSingleton<CustomFilePicker>(CustomFilePicker());
+  final uriContent = UriContent();
+  sl.registerSingleton<CustomFilePicker>(
+    CustomFilePicker(uriContent: uriContent),
+  );
 
   sl.registerSingleton<FilePickerRepository>(
     FilePickerRepository(nativeFilePicker: sl(), customFilePicker: sl()),

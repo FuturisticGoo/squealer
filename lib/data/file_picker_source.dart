@@ -1,10 +1,13 @@
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
+import 'package:futuristicgoo_utils/futuristicgoo_utils.dart';
 import 'package:pick_or_save/pick_or_save.dart';
 import 'package:squealer/core/constants.dart';
 import 'package:squealer/core/entities/database_meta_entities.dart';
 import 'package:squealer/core/entities/failure_success.dart';
+import 'package:uri_content/uri_content.dart';
+import 'package:path/path.dart' as p;
 
 abstract class FilePickerSource {
   Future<DatabaseInfo> pickDatabaseFile();
@@ -47,9 +50,38 @@ class NativeFilePicker extends FilePickerSource {
 }
 
 class CustomFilePicker {
+  final UriContent uriContent;
+  const CustomFilePicker({required this.uriContent});
   Future<DatabaseInfo> getDatabaseInfoFromFilePath({
     required String filePath,
   }) async {
+    if (!await File(filePath).exists()) {
+      throw InvalidPathError();
+    }
     return SQLiteDatabaseInfo(databaseUri: Uri.file(filePath));
+  }
+
+  // TODO: its  not opening the file when opened with fx
+  Future<DatabaseInfo> getDatabaseInfoFromContentUri({
+    required Uri contentUri,
+  }) async {
+    if (!contentUri.isScheme("content")) {
+      throw InvalidPathError();
+    }
+
+    Loggify.getLogger?.info("Going to read $contentUri");
+    final cachePath = await getAppCacheDir();
+    final streamSize = await uriContent.getContentLength(contentUri);
+    Loggify.getLogger?.info("Content URI file size: $streamSize");
+    final stream = uriContent.getContentStream(contentUri);
+    final outFile = File(p.join(cachePath, contentUri.pathSegments.last));
+    final outFileSink = outFile.openWrite(mode: FileMode.writeOnly);
+    await for (final bytes in stream) {
+      Loggify.getLogger?.info("Writing ${bytes.lengthInBytes} bytes");
+      outFileSink.add(bytes);
+    }
+    await outFileSink.flush();
+    await outFileSink.close();
+    return getDatabaseInfoFromFilePath(filePath: outFile.path);
   }
 }

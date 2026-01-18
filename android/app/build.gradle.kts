@@ -74,6 +74,10 @@ android {
         debug {
             applicationIdSuffix = ".debug"
             signingConfig = signingConfigs.getByName("debug")
+            resValue("string", "app_name", "Squealer Debug")
+        }
+        release {
+            resValue("string", "app_name", "Squealer")
         }
     }
 
@@ -82,6 +86,7 @@ android {
         create("independent") {
             dimension = "default"
             signingConfig = signingConfigs.getByName("release")
+
         }
         create("fdroid") {
             dimension = "default"

@@ -3,6 +3,8 @@ import 'package:logging/logging.dart';
 import 'package:sqlite_async/sqlite_async.dart';
 import 'package:squealer/core/constants.dart';
 import 'package:futuristicgoo_utils/futuristicgoo_utils.dart';
+import 'package:squealer/data/exporter_repo.dart';
+import 'package:squealer/data/exporter_source.dart';
 import 'package:squealer/data/file_picker_repo.dart';
 import 'package:squealer/data/file_picker_source.dart';
 import 'package:squealer/data/settings_repo.dart';
@@ -32,6 +34,9 @@ Future<void> initSetup() async {
   sl.registerSingleton<FilePickerRepository>(
     FilePickerRepository(nativeFilePicker: sl(), customFilePicker: sl()),
   );
+
+  sl.registerSingleton<ExporterSource>(ExporterSource());
+  sl.registerSingleton<ExporterRepo>(ExporterRepoImpl(exporterSource: sl()));
 
   sl.registerSingleton(SQLite3AsyncSQLiteSource());
   sl.registerSingleton<ViewerRepo>(

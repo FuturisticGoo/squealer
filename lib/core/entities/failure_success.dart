@@ -24,7 +24,6 @@ class GenericFailure extends Failure {
   const GenericFailure({required this.error, required this.stackTrace});
 }
 
-
 class NoSettingsFoundFailure extends Failure {}
 
 class NoMetadataFoundFailure extends Failure {}
@@ -44,17 +43,19 @@ class TableNameListingFailure extends GenericFailure {
 class ViewNameListingFailure extends GenericFailure {
   ViewNameListingFailure({required super.error, required super.stackTrace});
 }
+
 class InvalidPathFailure extends GenericFailure {
   InvalidPathFailure({required super.error, required super.stackTrace});
 }
 
-class FileNotPickedFailure extends Failure {}
+class FileNotPickedFailure extends GenericFailure {
+  FileNotPickedFailure({required super.error, required super.stackTrace});
+}
 
 class NoTableFailure extends Failure {}
 
 class InvalidSQLStatementFailure extends Failure {}
 
 class NoViewFailure extends Failure {}
-
 
 class Success {}

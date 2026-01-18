@@ -3,14 +3,17 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:squealer/core/entities/database_data_entities.dart';
 import 'package:squealer/core/entities/database_meta_entities.dart';
+import 'package:squealer/core/entities/export_format.dart';
+import 'package:squealer/data/exporter_repo.dart';
 import 'package:squealer/data/viewer_repo.dart';
 
 part 'data_browser_state.dart';
 
-
 class DataBrowserCubit extends Cubit<DataBrowserState> {
   final ViewerRepo viewerRepo;
-  DataBrowserCubit({required this.viewerRepo}) : super(DataBrowserInitial()) {
+  final ExporterRepo exporterRepo;
+  DataBrowserCubit({required this.viewerRepo, required this.exporterRepo})
+    : super(DataBrowserInitial()) {
     emit(DataBrowserLoading());
   }
 
@@ -56,7 +59,6 @@ class DataBrowserCubit extends Cubit<DataBrowserState> {
           databaseObject: databaseObject,
           tables: tables,
           views: views,
-
         ),
       );
     }
@@ -99,4 +101,26 @@ class DataBrowserCubit extends Cubit<DataBrowserState> {
       }
     }
   }
+  Future<void> exportData({required ExportFormat exportFormat}) async {
+    if (state case DataBrowserLoadedRelation(
+      :final databaseObject,
+      :final selectedRelation,
+    )) {
+      final queryResult = await viewerRepo.getRowsOfRelation(
+        databaseObject: databaseObject,
+        relationName: selectedRelation,
+      );
+      switch (queryResult) {
+        case Right(value: final databaseQueryResult):
+          final exportResult = await exporterRepo.exportTable(
+            databaseQueryResult: databaseQueryResult,
+            exportFormat: exportFormat,
+          );
+        case Left():
+          break;
+      }
+    }
+  }
+
+
 }

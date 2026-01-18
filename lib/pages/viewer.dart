@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:squealer/core/entities/database_meta_entities.dart';
 import 'package:squealer/core/init_setup.dart';
+import 'package:squealer/core/routes.dart';
 import 'package:squealer/cubit/data_browser_cubit.dart';
 import 'package:squealer/cubit/query_result_cubit.dart';
 import 'package:squealer/cubit/structure_listing_cubit.dart';
 import 'package:squealer/cubit/viewer_cubit.dart';
 import 'package:squealer/pages/viewer_widgets/data_browser.dart';
 import 'package:squealer/pages/viewer_widgets/error_info_widget.dart';
+import 'package:squealer/pages/viewer_widgets/export_dialog.dart';
 import 'package:squealer/pages/viewer_widgets/query_result.dart';
 import 'package:squealer/pages/viewer_widgets/structure_listing.dart';
 
@@ -46,12 +49,56 @@ class _ViewerState extends State<Viewer> with TickerProviderStateMixin {
         BlocProvider(
           create: (context) => StructureListingCubit(viewerRepo: sl()),
         ),
-        BlocProvider(create: (context) => DataBrowserCubit(viewerRepo: sl())),
-        BlocProvider(create: (context) => QueryResultCubit(viewerRepo: sl())),
+        BlocProvider(
+          create: (context) =>
+              DataBrowserCubit(viewerRepo: sl(), exporterRepo: sl()),
+        ),
+        BlocProvider(
+          create: (context) =>
+              QueryResultCubit(viewerRepo: sl(), exporterRepo: sl()),
+        ),
       ],
       child: SafeArea(
         child: Scaffold(
-          appBar: AppBar(),
+          appBar: AppBar(
+            actions: [
+              PopupMenuButton(
+                itemBuilder: (context) {
+                  return [
+                    PopupMenuItem(
+                      onTap: () {
+                        context.push(SquealerRouter.settingsPage);
+                      },
+                      child: ListTile(
+                        title: Text("Settings"),
+                        leading: Icon(Icons.settings),
+                      ),
+                    ),
+                    if (_tabController.index == 1)
+                      PopupMenuItem(
+                        onTap: () {
+                          context.push(SquealerRouter.settingsPage);
+                        },
+                        child: ListTile(
+                          title: Text("Export relation"),
+                          leading: Icon(Icons.ios_share),
+                          onTap: () async {
+                            final exportFormat = await showExportDialog(
+                              context,
+                            );
+                            if (context.mounted && exportFormat != null) {
+                              await context.read<DataBrowserCubit>().exportData(
+                                exportFormat: exportFormat,
+                              );
+                            }
+                          },
+                        ),
+                      ),
+                  ];
+                },
+              ),
+            ],
+          ),
           body: BlocConsumer<ViewerCubit, ViewerState>(
             listener: (context, state) async {
               _viewerCubit = context.read<ViewerCubit>();
@@ -107,8 +154,7 @@ class _ViewerState extends State<Viewer> with TickerProviderStateMixin {
                               children: [
                                 StructureListing(),
                                 DataBrowser(),
-                                QueryResult(
-                                ),
+                                QueryResult(),
                               ],
                             ),
                           ),

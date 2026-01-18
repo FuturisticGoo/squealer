@@ -3,14 +3,18 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:squealer/core/entities/database_data_entities.dart';
 import 'package:squealer/core/entities/database_meta_entities.dart';
+import 'package:squealer/core/entities/export_format.dart';
 import 'package:squealer/core/entities/failure_success.dart';
+import 'package:squealer/data/exporter_repo.dart';
 import 'package:squealer/data/viewer_repo.dart';
 
 part 'query_result_state.dart';
 
 class QueryResultCubit extends Cubit<QueryResultState> {
   final ViewerRepo viewerRepo;
-  QueryResultCubit({required this.viewerRepo}) : super(QueryResultInitial()) {
+  final ExporterRepo exporterRepo;
+  QueryResultCubit({required this.viewerRepo, required this.exporterRepo})
+    : super(QueryResultInitial()) {
     emit(QueryResultLoading());
   }
 
@@ -18,6 +22,19 @@ class QueryResultCubit extends Cubit<QueryResultState> {
     if (state is! QueryResultDatabaseLoaded) {
       emit(QueryResultDatabaseLoaded(databaseObject: databaseObject));
     }
+  }
+
+  Future<void> exportData({required ExportFormat exportFormat}) async {
+    if (state case QueryResultExecuteResult(:final queryResult)) {
+      final exportResult = await exporterRepo.exportTable(
+        databaseQueryResult: queryResult,
+        exportFormat: exportFormat,
+      );
+    }
+  }
+
+  Future<void> exportSql({required String sql}) async {
+    await exporterRepo.exportSql(sql: sql);
   }
 
   Future<void> executeQuery({required String sqlQuery}) async {

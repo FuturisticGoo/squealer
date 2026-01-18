@@ -56,8 +56,18 @@ class _FirstTimeOrUpdatePageState extends State<FirstTimeOrUpdatePage> {
               // Nothing to do as of now, but may be required later.
               if (!updateCallbackRegistered) {
                 updateCallbackRegistered = true;
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  context.go(SquealerRouter.homePage);
+                WidgetsBinding.instance.addPostFrameCallback((_) async {
+                  if (context.mounted) {
+                    await context
+                        .read<GlobalSettingsCubit>()
+                        .updateLastUsedVersion(newVersion: appVersion);
+                  }
+                  if (context.mounted) {
+                    await context.read<GlobalSettingsCubit>().loadSettings();
+                  }
+                  if (context.mounted) {
+                    context.go(SquealerRouter.homePage);
+                  }
                 });
               }
               return LoadingWidget(loadingText: "Updating app..");

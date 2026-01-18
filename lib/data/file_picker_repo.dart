@@ -76,7 +76,9 @@ class FilePickerRepository {
         error,
         stackTrace,
       );
-      return Either.left(FileNotPickedFailure());
+      return Either.left(
+        FileNotPickedFailure(error: error, stackTrace: stackTrace),
+      );
     } catch (error, stackTrace) {
       Loggify.getLogger?.severe(
         "Unknown error in pickDatabaseFile",

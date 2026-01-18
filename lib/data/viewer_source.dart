@@ -40,7 +40,9 @@ class SQLiteViewerRepo implements ViewerRepo {
     try {
       switch (databaseObject) {
         case SQLite3AsyncDatabaseObject(:final db):
-          await sqLite3AsyncSQLiteSource.closeDatabase(db: db);
+
+          await db.close();
+          Loggify.getLogger?.config("Closed database $db");
           return Either.right(Success());
       }
     } catch (error, stackTrace) {
@@ -306,12 +308,11 @@ AND
       [tableName],
     );
 
-      return DatabaseTable(
-        tableName: tableName,
-        columns: tableColumns,
+    return DatabaseTable(
+      tableName: tableName,
+      columns: tableColumns,
       sql: tableSchemaResult["sql"] as String,
-      );
-
+    );
   }
 
   Future<List<String>> listViewNames({required SqliteDatabase db}) async {

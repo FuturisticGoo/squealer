@@ -43,8 +43,13 @@ class _ViewerState extends State<Viewer> with TickerProviderStateMixin {
     return MultiBlocProvider(
       providers: [
         BlocProvider(
-          create: (context) =>
-              ViewerCubit(viewerRepo: sl(), databaseInfo: widget.databaseInfo),
+          create: (context) {
+            _viewerCubit = ViewerCubit(
+              viewerRepo: sl(),
+              databaseInfo: widget.databaseInfo,
+            );
+            return _viewerCubit!;
+          },
         ),
         BlocProvider(
           create: (context) => StructureListingCubit(viewerRepo: sl()),
@@ -101,7 +106,6 @@ class _ViewerState extends State<Viewer> with TickerProviderStateMixin {
           ),
           body: BlocConsumer<ViewerCubit, ViewerState>(
             listener: (context, state) async {
-              _viewerCubit = context.read<ViewerCubit>();
               if (state case ViewerDatabaseLoaded(:final databaseObject)) {
                 await context.read<StructureListingCubit>().databaseOpened(
                   databaseObject: databaseObject,

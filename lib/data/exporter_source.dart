@@ -75,8 +75,17 @@ class ExporterSource {
     required ExportFormat exportFormat,
   }) async {
     switch (exportFormat) {
-      case CSVFormat(:final delimiter, :final storeColumnNames):
-        final converter = ListToCsvConverter(fieldDelimiter: delimiter);
+      case CSVFormat(
+        :final delimiter,
+        :final storeColumnNames,
+        :final stringDelimiter,
+        :final endOfLine,
+      ):
+        final converter = ListToCsvConverter(
+          fieldDelimiter: delimiter,
+          textDelimiter: stringDelimiter,
+          eol: endOfLine,
+        );
         final appCacheDir = await getAppCacheDir();
         final outputFileName =
             "${DateTime.now().millisecondsSinceEpoch.toString()}.csv";
@@ -105,7 +114,11 @@ class ExporterSource {
         csvSink.close();
         await fileWriterCompleter.future;
 
-      case JSONFormat(:final storeQuery, :final storeColumnNames):
+      case JSONFormat(
+        :final storeQuery,
+        :final storeColumnNames,
+        :final indentation,
+      ):
         final appCacheDir = await getAppCacheDir();
         final outputFileName =
             "${DateTime.now().millisecondsSinceEpoch.toString()}.json";
@@ -122,7 +135,7 @@ class ExporterSource {
               .map((e) => e.rowData)
               .toList(),
         };
-        final jsonEncoder = JsonEncoder.withIndent(" " * 4);
+        final jsonEncoder = JsonEncoder.withIndent(" " * indentation);
         final jsonString = jsonEncoder.convert(jsonMap);
         await outputFile.write(jsonString);
         await outputFile.close();

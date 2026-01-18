@@ -5,9 +5,10 @@ Features:
 <li>View schema of tables and views.</li>
 <li>Show records from tables and views.</li>
 <li>Execute SQL queries</li>
+<li>Export to CSV or JSON</li>
 </ul>
 
-Currently, read-only queries are supported, write commands are not.
+Read and write commands are supported.
 
 Made using Flutter </br>
 Programmed with ♡

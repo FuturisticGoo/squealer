@@ -1,0 +1,4 @@
+Release Numero Dos
+
+Now it is possible to perform write commands in the query page
+Added ability to export tables/views to CSV/JSON (experimental)

@@ -99,6 +99,39 @@ class _ViewerState extends State<Viewer> with TickerProviderStateMixin {
                           },
                         ),
                       ),
+                    if (_tabController.index == 2)
+                      PopupMenuItem(
+                        onTap: () {
+                          context.push(SquealerRouter.settingsPage);
+                        },
+                        child: ListTile(
+                          title: Text("Export relation"),
+                          leading: Icon(Icons.ios_share),
+                          onTap: () async {
+                            final exportFormat = await showExportDialog(
+                              context,
+                            );
+                            if (context.mounted && exportFormat != null) {
+                              await context.read<QueryResultCubit>().exportData(
+                                exportFormat: exportFormat,
+                              );
+                            }
+                          },
+                        ),
+                      ),
+                    if (_tabController.index == 2)
+                      PopupMenuItem(
+                        onTap: () {
+                          context.push(SquealerRouter.settingsPage);
+                        },
+                        child: ListTile(
+                          title: Text("Export SQL"),
+                          leading: Icon(Icons.ios_share),
+                          onTap: () async {
+                            await context.read<QueryResultCubit>().exportSql();
+                          },
+                        ),
+                      ),
                   ];
                 },
               ),

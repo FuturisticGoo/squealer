@@ -33,8 +33,10 @@ class QueryResultCubit extends Cubit<QueryResultState> {
     }
   }
 
-  Future<void> exportSql({required String sql}) async {
-    await exporterRepo.exportSql(sql: sql);
+  Future<void> exportSql() async {
+    if (state case QueryResultExecuteResult(:final queryResult)) {
+      await exporterRepo.exportSql(sql: queryResult.originalQuery);
+    }
   }
 
   Future<void> executeQuery({required String sqlQuery}) async {

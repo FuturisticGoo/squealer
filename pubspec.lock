@@ -229,10 +229,10 @@ packages:
     description:
       path: "."
       ref: HEAD
-      resolved-ref: "3db3bb91196b0435d01cc580d6ee1118fd6fe762"
+      resolved-ref: "5c3f9c5130c92235e4604aba1a4a17527ecc1350"
       url: "https://github.com/FuturisticGoo/futuristicgoo_flutter_utils"
     source: git
-    version: "0.0.2"
+    version: "0.0.3"
   get_it:
     dependency: "direct main"
     description:

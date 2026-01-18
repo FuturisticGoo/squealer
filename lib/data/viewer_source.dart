@@ -427,7 +427,7 @@ AND
     required String query,
   }) async {
     // TODO: do lazy query
-    final rawQueryResult = await db.getAll(query);
+    final rawQueryResult = await db.execute(query);
     final processedRows = <TableRow>[];
     int rowIdx = 0;
     for (final row in rawQueryResult) {

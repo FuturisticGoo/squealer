@@ -7,6 +7,7 @@ import 'package:futuristicgoo_utils/futuristicgoo_utils.dart';
 import 'package:squealer/core/constants.dart';
 import 'package:squealer/core/entities/database_data_entities.dart';
 import 'package:squealer/core/entities/export_format.dart';
+import 'package:squealer/core/entities/export_progress_type.dart';
 import 'package:squealer/core/entities/failure_success.dart';
 import 'package:squealer/data/exporter_repo.dart';
 
@@ -74,6 +75,7 @@ class ExporterSource {
     required DatabaseQueryResult databaseQueryResult,
     required ExportFormat exportFormat,
   }) async {
+    final globalProgressPipe = GlobalProgressPipe.instance;
     switch (exportFormat) {
       case CSVFormat(
         :final delimiter,
@@ -94,25 +96,37 @@ class ExporterSource {
           cacheDirectory: appCacheDir,
         );
         final sc = StreamController<String>();
-        final fileWriterCompleter = Completer();
+        final outCsvStringBuffer = StringBuffer();
+        final outputBufferCompleter = Completer();
         sc.stream.listen(
           (event) async {
-            await outputFile.write(event);
+            outCsvStringBuffer.write(event);
           },
           onDone: () async {
-            await outputFile.close();
-            fileWriterCompleter.complete();
+            outputBufferCompleter.complete();
           },
         );
         final csvSink = converter.startChunkedConversion(sc.sink);
         if (storeColumnNames) {
           csvSink.add(databaseQueryResult.columnNames);
         }
+        globalProgressPipe.addProgress(
+          progressEvent: ExportingRowsUpdate(finished: 0, total: 2),
+        );
         for (final rows in databaseQueryResult.rows) {
           csvSink.add(rows.rowData);
         }
+        globalProgressPipe.addProgress(
+          progressEvent: ExportingRowsUpdate(finished: 1, total: 2),
+        );
         csvSink.close();
-        await fileWriterCompleter.future;
+        await outputBufferCompleter.future;
+        await outputFile.write(outCsvStringBuffer.toString());
+        await outputFile.close();
+        globalProgressPipe.addProgress(
+          progressEvent: ExportingRowsUpdate(finished: 2, total: 2),
+        );
+        globalProgressPipe.addProgress(progressEvent: ExportingRowsFinished());
 
       case JSONFormat(
         :final storeQuery,
@@ -136,9 +150,19 @@ class ExporterSource {
               .toList(),
         };
         final jsonEncoder = JsonEncoder.withIndent(" " * indentation);
+        globalProgressPipe.addProgress(
+          progressEvent: ExportingRowsUpdate(finished: 0, total: 2),
+        );
         final jsonString = jsonEncoder.convert(jsonMap);
+        globalProgressPipe.addProgress(
+          progressEvent: ExportingRowsUpdate(finished: 1, total: 2),
+        );
         await outputFile.write(jsonString);
         await outputFile.close();
+        globalProgressPipe.addProgress(
+          progressEvent: ExportingRowsUpdate(finished: 2, total: 2),
+        );
+        globalProgressPipe.addProgress(progressEvent: ExportingRowsFinished());
     }
   }
 

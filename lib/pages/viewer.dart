@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:squealer/core/entities/database_meta_entities.dart';
+import 'package:squealer/core/entities/export_progress_type.dart';
 import 'package:squealer/core/init_setup.dart';
 import 'package:squealer/core/routes.dart';
 import 'package:squealer/cubit/data_browser_cubit.dart';
@@ -11,6 +12,7 @@ import 'package:squealer/cubit/viewer_cubit.dart';
 import 'package:squealer/pages/viewer_widgets/data_browser.dart';
 import 'package:squealer/pages/viewer_widgets/error_info_widget.dart';
 import 'package:squealer/pages/viewer_widgets/export_dialog.dart';
+import 'package:squealer/pages/viewer_widgets/progress_dialog.dart';
 import 'package:squealer/pages/viewer_widgets/query_result.dart';
 import 'package:squealer/pages/viewer_widgets/structure_listing.dart';
 
@@ -87,6 +89,11 @@ class _ViewerState extends State<Viewer> with TickerProviderStateMixin {
                         onTap: () async {
                           final exportFormat = await showExportDialog(context);
                           if (context.mounted && exportFormat != null) {
+                            showProgressDialog<
+                              ExportingRowsUpdate,
+                              ExportingRowsFinished,
+                              ExportingRowsError
+                            >(context, titleText: "Exporting", subtitle: "");
                             await context.read<DataBrowserCubit>().exportData(
                               exportFormat: exportFormat,
                             );
@@ -105,6 +112,11 @@ class _ViewerState extends State<Viewer> with TickerProviderStateMixin {
                         onTap: () async {
                           final exportFormat = await showExportDialog(context);
                           if (context.mounted && exportFormat != null) {
+                            showProgressDialog<
+                              ExportingRowsUpdate,
+                              ExportingRowsFinished,
+                              ExportingRowsError
+                            >(context, titleText: "Exporting", subtitle: "");
                             await context.read<QueryResultCubit>().exportData(
                               exportFormat: exportFormat,
                             );

@@ -24,7 +24,7 @@ class _StructureListingState extends State<StructureListing>
       builder: (context, state) {
         switch (state) {
           case StructureListingInitial():
-          case StructureListingLoading():
+          case StructureListingLoading(structureLoadingPart: null):
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -36,6 +36,16 @@ class _StructureListingState extends State<StructureListing>
                 ],
               ),
             );
+          case StructureListingLoading(
+            structureLoadingPart: StructureLoadingPart(
+              previousState: StructureListingLoaded(
+                :final tables,
+                :final tablesExpanded,
+                :final views,
+                :final viewsExpanded,
+              ),
+            ),
+          ):
           case StructureListingLoaded(
             :final tables,
             :final tablesExpanded,
@@ -57,7 +67,10 @@ class _StructureListingState extends State<StructureListing>
                     shape: const Border(),
                     childrenPadding: EdgeInsets.only(left: 20),
                     children: [
-                      if (tables.isEmpty)
+                      if (state is StructureListingLoading &&
+                          state.structureLoadingPart is LoadingRelationNames)
+                        Center(child: CircularProgressIndicator())
+                      else if (tables.isEmpty)
                         Text("No tables")
                       else
                         ListView.builder(
@@ -68,7 +81,12 @@ class _StructureListingState extends State<StructureListing>
                             final currentTableName = tables[index];
                             return ExpansionTile(
                               title: Text(currentTableName),
-                              childrenPadding: EdgeInsets.only(left: 20),
+                              childrenPadding: EdgeInsets.fromLTRB(
+                                20,
+                                10,
+                                0,
+                                10,
+                              ),
                               shape: const Border(),
                               onExpansionChanged: (isExpanding) async {
                                 if (isExpanding) {
@@ -85,40 +103,48 @@ class _StructureListingState extends State<StructureListing>
                                       );
                                 }
                               },
-                              children:
-                                  switch (tablesExpanded[currentTableName]) {
-                                    null => [],
-                                    DatabaseTable(:final columns, :final sql) => [
-                                      SQLTile(sql: sql),
-                                      Divider(),
-                                      ...columns.map((col) {
-                                        return ExpansionTile(
-                                          title: Text(col.columnName),
-                                          childrenPadding: EdgeInsets.only(
-                                            left: 20,
-                                          ),
-                                          shape: const Border(),
-                                          children: [
-                                            ListTile(title: Text(col.dataType)),
-                                            if (col.notNullable)
-                                              ListTile(title: Text("NOT NULL")),
-                                            if (col.unique)
-                                              ListTile(title: Text("UNIQUE")),
-                                            if (col.isPrimaryKey)
-                                              ListTile(
-                                                title: Text("PRIMARY KEY"),
+                              children: switch (state) {
+                                StructureListingLoading(
+                                  structureLoadingPart: LoadingTableDetails(
+                                    :final tableName,
+                                  ),
+                                )
+                                    when currentTableName == tableName =>
+                                  [Center(child: CircularProgressIndicator())],
+                                _ => switch (tablesExpanded[currentTableName]) {
+                                  null => [],
+                                  DatabaseTable(:final columns, :final sql) => [
+                                    SQLTile(sql: sql),
+                                    Divider(),
+                                    ...columns.map((col) {
+                                      return ExpansionTile(
+                                        title: Text(col.columnName),
+                                        childrenPadding: EdgeInsets.only(
+                                          left: 20,
+                                        ),
+                                        shape: const Border(),
+                                        children: [
+                                          ListTile(title: Text(col.dataType)),
+                                          if (col.notNullable)
+                                            ListTile(title: Text("NOT NULL")),
+                                          if (col.unique)
+                                            ListTile(title: Text("UNIQUE")),
+                                          if (col.isPrimaryKey)
+                                            ListTile(
+                                              title: Text("PRIMARY KEY"),
+                                            ),
+                                          if (col.defaultValue != null)
+                                            ListTile(
+                                              title: Text(
+                                                "DEFAULT ${col.defaultValue}",
                                               ),
-                                            if (col.defaultValue != null)
-                                              ListTile(
-                                                title: Text(
-                                                  "DEFAULT ${col.defaultValue}",
-                                                ),
-                                              ),
-                                          ],
-                                        );
-                                      }),
-                                    ],
-                                  },
+                                            ),
+                                        ],
+                                      );
+                                    }),
+                                  ],
+                                },
+                              },
                             );
                           },
                         ),
@@ -136,7 +162,10 @@ class _StructureListingState extends State<StructureListing>
                     shape: const Border(),
                     childrenPadding: EdgeInsets.only(left: 20),
                     children: [
-                      if (views.isEmpty)
+                      if (state is StructureListingLoading &&
+                          state.structureLoadingPart is LoadingRelationNames)
+                        Center(child: CircularProgressIndicator())
+                      else if (views.isEmpty)
                         Text("No views")
                       else
                         ListView.builder(
@@ -164,13 +193,21 @@ class _StructureListingState extends State<StructureListing>
                                       );
                                 }
                               },
-                              children:
-                                  switch (viewsExpanded[currentViewName]) {
-                                    null => [],
-                                    DatabaseView(:final sql) => [
-                                      SQLTile(sql: sql),
-                                    ],
-                                  },
+                              children: switch (state) {
+                                StructureListingLoading(
+                                  structureLoadingPart: LoadingViewDetails(
+                                    :final viewName,
+                                  ),
+                                )
+                                    when viewName == currentViewName =>
+                                  [Center(child: CircularProgressIndicator())],
+                                _ => switch (viewsExpanded[currentViewName]) {
+                                  null => [],
+                                  DatabaseView(:final sql) => [
+                                    SQLTile(sql: sql),
+                                  ],
+                                },
+                              },
                             );
                           },
                         ),

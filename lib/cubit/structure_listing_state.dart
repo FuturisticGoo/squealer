@@ -4,9 +4,16 @@ sealed class StructureListingState {
   const StructureListingState();
 }
 
-class StructureListingInitial extends StructureListingLoading {}
+class StructureListingInitial extends StructureListingState {}
 
-class StructureListingLoading extends StructureListingState {}
+class StructureListingLoading extends StructureListingState
+    with EquatableMixin {
+  // Which part specifically are we loading, to show the progress bar
+  final StructureLoadingPart? structureLoadingPart;
+  const StructureListingLoading({this.structureLoadingPart});
+  @override
+  List<Object?> get props => [structureLoadingPart];
+}
 
 class StructureListingLoaded extends StructureListingState with EquatableMixin {
   final DatabaseObject databaseObject;
@@ -37,4 +44,31 @@ class StructureListingError extends StructureListingState with EquatableMixin {
   const StructureListingError({required this.error, this.stackTrace});
   @override
   List<Object?> get props => [error, stackTrace];
+}
+
+sealed class StructureLoadingPart extends Equatable {
+  final StructureListingLoaded previousState;
+  const StructureLoadingPart({required this.previousState});
+  @override
+  List<Object?> get props => [previousState];
+}
+
+class LoadingRelationNames extends StructureLoadingPart {
+  const LoadingRelationNames({required super.previousState});
+}
+
+class LoadingTableDetails extends StructureLoadingPart {
+  final String tableName;
+  const LoadingTableDetails({
+    required super.previousState,
+    required this.tableName,
+  });
+}
+
+class LoadingViewDetails extends StructureLoadingPart {
+  final String viewName;
+  const LoadingViewDetails({
+    required super.previousState,
+    required this.viewName,
+  });
 }

@@ -29,7 +29,13 @@ class StructureListingCubit extends Cubit<StructureListingState> {
   }
 
   Future<void> loadTableAndViewNames() async {
-    if (state case StructureListingLoaded(:final databaseObject)) {
+    final localState = state;
+    if (localState case StructureListingLoaded(:final databaseObject)) {
+      emit(
+        StructureListingLoading(
+          structureLoadingPart: LoadingRelationNames(previousState: localState),
+        ),
+      );
       List<String> tables;
       List<String> views;
       final tableNamesResult = await viewerRepo.listTableNames(
@@ -66,13 +72,22 @@ class StructureListingCubit extends Cubit<StructureListingState> {
   }
 
   Future<void> getTableDetails({required String tableName}) async {
-    if (state case StructureListingLoaded(
+    final localState = state;
+    if (localState case StructureListingLoaded(
       :final databaseObject,
       :final tables,
       :final tablesExpanded,
       :final views,
       :final viewsExpanded,
     )) {
+      emit(
+        StructureListingLoading(
+          structureLoadingPart: LoadingTableDetails(
+            previousState: localState,
+            tableName: tableName,
+          ),
+        ),
+      );
       final tableDetailsResult = await viewerRepo.getTableInfo(
         databaseObject: databaseObject,
         tableName: tableName,
@@ -116,13 +131,22 @@ class StructureListingCubit extends Cubit<StructureListingState> {
   }
 
   Future<void> getViewDetails({required String viewName}) async {
-    if (state case StructureListingLoaded(
+    final localState = state;
+    if (localState case StructureListingLoaded(
       :final databaseObject,
       :final tables,
       :final tablesExpanded,
       :final views,
       :final viewsExpanded,
     )) {
+      emit(
+        StructureListingLoading(
+          structureLoadingPart: LoadingViewDetails(
+            previousState: localState,
+            viewName: viewName,
+          ),
+        ),
+      );
       final viewDetailsResult = await viewerRepo.getViewInfo(
         databaseObject: databaseObject,
         viewName: viewName,

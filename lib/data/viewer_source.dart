@@ -264,20 +264,22 @@ WHERE
     required SqliteDatabase db,
     required String tableName,
   }) async {
-    final tableInfoResult = await db.getAll("PRAGMA table_info($tableName)");
+    final tableInfoResult = await db.getAll('PRAGMA table_info("$tableName")');
 
     if (tableInfoResult.isEmpty) {
       throw NoTableError();
     }
 
-    final indexListResult = await db.getAll("PRAGMA index_list($tableName)");
+    final indexListResult = await db.getAll('PRAGMA index_list("$tableName")');
     final uniqueIndexes = indexListResult.where((element) {
       return element["unique"] == 1;
     });
     final uniqueColumns = <String>{};
     for (final uniqueIndex in uniqueIndexes) {
       final indexName = uniqueIndex["name"] as String;
-      final uniqueColumnResult = await db.get("PRAGMA index_info($indexName)");
+      final uniqueColumnResult = await db.get(
+        'PRAGMA index_info("$indexName")',
+      );
       uniqueColumns.add(uniqueColumnResult["name"]);
     }
 

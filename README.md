@@ -6,5 +6,6 @@ Explore SQLite database files.
 - Show schema of tables and views
 - Show data in the tables and views
 - Execute queries  
+- Export to CSV or JSON
 
-This app is pretty barebones, currently it supports only read-only operations.
+Read and write commands are supported.

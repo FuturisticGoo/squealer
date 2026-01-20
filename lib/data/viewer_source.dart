@@ -40,7 +40,6 @@ class SQLiteViewerRepo implements ViewerRepo {
     try {
       switch (databaseObject) {
         case SQLite3AsyncDatabaseObject(:final db):
-
           await db.close();
           Loggify.getLogger?.config("Closed database $db");
           return Either.right(Success());
@@ -260,17 +259,21 @@ WHERE
     return tablesResult.map((row) => row["name"] as String).toList();
   }
 
-  Future<DatabaseTable> getTableInfo({
+  Future<List<TableColumn>> _getTableColumnInfo({
     required SqliteDatabase db,
-    required String tableName,
+    required String relationName,
   }) async {
-    final tableInfoResult = await db.getAll('PRAGMA table_info("$tableName")');
+    final tableInfoResult = await db.getAll(
+      'PRAGMA table_info("$relationName")',
+    );
 
     if (tableInfoResult.isEmpty) {
       throw NoTableError();
     }
 
-    final indexListResult = await db.getAll('PRAGMA index_list("$tableName")');
+    final indexListResult = await db.getAll(
+      'PRAGMA index_list("$relationName")',
+    );
     final uniqueIndexes = indexListResult.where((element) {
       return element["unique"] == 1;
     });
@@ -295,7 +298,17 @@ WHERE
       );
       tableColumns.add(tableColumn);
     }
+    return tableColumns;
+  }
 
+  Future<DatabaseTable> getTableInfo({
+    required SqliteDatabase db,
+    required String tableName,
+  }) async {
+    final tableColumns = await _getTableColumnInfo(
+      db: db,
+      relationName: tableName,
+    );
     final tableSchemaResult = await db.get(
       """ 
 SELECT 
@@ -333,6 +346,10 @@ WHERE
     required SqliteDatabase db,
     required String viewName,
   }) async {
+    final viewColumns = await _getTableColumnInfo(
+      db: db,
+      relationName: viewName,
+    );
     final tableInfoResult = await db.getAll(
       """ 
 SELECT 
@@ -350,7 +367,11 @@ AND
       throw NoViewError();
     }
     final createViewQuery = tableInfoResult.single["sql"] as String;
-    return DatabaseView(viewName: viewName, sql: createViewQuery);
+    return DatabaseView(
+      viewName: viewName,
+      sql: createViewQuery,
+      columns: viewColumns,
+    );
   }
 
   Future<DatabaseQueryResult> getRowsOfRelation({
@@ -404,7 +425,6 @@ AND
       queryBuilder.writeln("LIMIT $limitRows");
     }
     final rowsResult = await db.getAll(queryBuilder.toString());
-    // print(queryBuilder.toString());
     final processedRows = <TableRow>[];
     final columnNames = rowsResult.columnNames
         .filter((t) => t != privateRowNumber)

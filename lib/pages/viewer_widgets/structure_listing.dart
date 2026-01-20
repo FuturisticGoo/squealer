@@ -117,30 +117,7 @@ class _StructureListingState extends State<StructureListing>
                                     SQLTile(sql: sql),
                                     Divider(),
                                     ...columns.map((col) {
-                                      return ExpansionTile(
-                                        title: Text(col.columnName),
-                                        childrenPadding: EdgeInsets.only(
-                                          left: 20,
-                                        ),
-                                        shape: const Border(),
-                                        children: [
-                                          ListTile(title: Text(col.dataType)),
-                                          if (col.notNullable)
-                                            ListTile(title: Text("NOT NULL")),
-                                          if (col.unique)
-                                            ListTile(title: Text("UNIQUE")),
-                                          if (col.isPrimaryKey)
-                                            ListTile(
-                                              title: Text("PRIMARY KEY"),
-                                            ),
-                                          if (col.defaultValue != null)
-                                            ListTile(
-                                              title: Text(
-                                                "DEFAULT ${col.defaultValue}",
-                                              ),
-                                            ),
-                                        ],
-                                      );
+                                      return TableColumnInfoTile(column: col);
                                     }),
                                   ],
                                 },
@@ -203,8 +180,12 @@ class _StructureListingState extends State<StructureListing>
                                   [Center(child: CircularProgressIndicator())],
                                 _ => switch (viewsExpanded[currentViewName]) {
                                   null => [],
-                                  DatabaseView(:final sql) => [
+                                  DatabaseView(:final sql, :final columns) => [
                                     SQLTile(sql: sql),
+                                    Divider(),
+                                    ...columns.map((col) {
+                                      return TableColumnInfoTile(column: col);
+                                    }),
                                   ],
                                 },
                               },
@@ -221,6 +202,28 @@ class _StructureListingState extends State<StructureListing>
             return Center(child: ErrorWidget(error));
         }
       },
+    );
+  }
+}
+
+class TableColumnInfoTile extends StatelessWidget {
+  final TableColumn column;
+  const TableColumnInfoTile({super.key, required this.column});
+
+  @override
+  Widget build(BuildContext context) {
+    return ExpansionTile(
+      title: Text(column.columnName),
+      childrenPadding: EdgeInsets.only(left: 20),
+      shape: const Border(),
+      children: [
+        ListTile(title: Text(column.dataType)),
+        if (column.notNullable) ListTile(title: Text("NOT NULL")),
+        if (column.unique) ListTile(title: Text("UNIQUE")),
+        if (column.isPrimaryKey) ListTile(title: Text("PRIMARY KEY")),
+        if (column.defaultValue != null)
+          ListTile(title: Text("DEFAULT ${column.defaultValue}")),
+      ],
     );
   }
 }

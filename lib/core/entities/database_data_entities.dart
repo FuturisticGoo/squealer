@@ -28,10 +28,15 @@ class DatabaseTable extends Equatable {
 
 class DatabaseView extends Equatable {
   final String viewName;
+  final List<TableColumn> columns;
   final String sql;
-  const DatabaseView({required this.viewName, required this.sql});
+  const DatabaseView({
+    required this.viewName,
+    required this.sql,
+    required this.columns,
+  });
   @override
-  List<Object?> get props => [viewName, sql];
+  List<Object?> get props => [viewName, sql, columns];
 }
 
 class TableColumn extends Equatable {

@@ -164,7 +164,7 @@ class _ViewerState extends State<Viewer> with TickerProviderStateMixin {
                 if (context.mounted) {
                   await context
                       .read<StructureListingCubit>()
-                      .loadTableAndViewNames();
+                      .loadAllSchemaNames();
                 }
               }
             },

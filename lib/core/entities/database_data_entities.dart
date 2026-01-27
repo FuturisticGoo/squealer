@@ -39,6 +39,34 @@ class DatabaseView extends Equatable {
   List<Object?> get props => [viewName, sql, columns];
 }
 
+class DatabaseIndex extends Equatable {
+  final String indexName;
+  final String onTable;
+  final List<String> onColumns;
+  final String? sql;
+  const DatabaseIndex({
+    required this.indexName,
+    required this.onTable,
+    required this.onColumns,
+    required this.sql,
+  });
+  @override
+  List<Object?> get props => [indexName, onTable, onColumns, sql];
+}
+
+class DatabaseTrigger extends Equatable {
+  final String triggerName;
+  final String onTable;
+  final String sql;
+  const DatabaseTrigger({
+    required this.triggerName,
+    required this.onTable,
+    required this.sql,
+  });
+  @override
+  List<Object?> get props => [triggerName, onTable, sql];
+}
+
 class TableColumn extends Equatable {
   final String columnName;
   final String dataType;

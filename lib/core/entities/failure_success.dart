@@ -4,6 +4,11 @@ class NoTableError extends Error {}
 
 class NoViewError extends Error {}
 
+class NoIndexError extends Error {}
+
+class NoTriggerError extends Error {}
+
+
 class InvalidSQLStatementError extends Error {}
 
 class NoSettingsFoundError extends Error {}
@@ -57,5 +62,10 @@ class NoTableFailure extends Failure {}
 class InvalidSQLStatementFailure extends Failure {}
 
 class NoViewFailure extends Failure {}
+
+class NoIndexFailure extends Failure {}
+
+class NoTriggerFailure extends Failure {}
+
 
 class Success {}

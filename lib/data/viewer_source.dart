@@ -11,16 +11,13 @@ class SQLiteViewerRepo implements ViewerRepo {
   const SQLiteViewerRepo({required this.sqLite3AsyncSQLiteSource});
   @override
   Future<Either<Failure, DatabaseObject>> openDatabase({
-    required DatabaseInfo databaseInfo,
+    required covariant SQLiteDatabaseInfo databaseInfo,
   }) async {
     try {
-      switch (databaseInfo) {
-        case SQLiteDatabaseInfo(:final databaseUri):
-          final dbObject = await sqLite3AsyncSQLiteSource.openDatabase(
-            dbPath: databaseUri.toFilePath(),
-          );
-          return Either.right(dbObject);
-      }
+      final dbObject = await sqLite3AsyncSQLiteSource.openDatabase(
+        dbPath: databaseInfo.databaseUri.toFilePath(),
+      );
+      return Either.right(dbObject);
     } catch (error, stackTrace) {
       Loggify.getLogger?.severe(
         "Error while opening database",
@@ -35,15 +32,12 @@ class SQLiteViewerRepo implements ViewerRepo {
 
   @override
   Future<Either<Failure, Success>> closeDatabase({
-    required DatabaseObject databaseObject,
+    required covariant SQLite3AsyncDatabaseObject databaseObject,
   }) async {
     try {
-      switch (databaseObject) {
-        case SQLite3AsyncDatabaseObject(:final db):
-          await db.close();
-          Loggify.getLogger?.config("Closed database $db");
-          return Either.right(Success());
-      }
+      await databaseObject.db.close();
+      Loggify.getLogger?.config("Closed database ${databaseObject.db}");
+      return Either.right(Success());
     } catch (error, stackTrace) {
       Loggify.getLogger?.severe(
         "Error while closing database",
@@ -58,16 +52,13 @@ class SQLiteViewerRepo implements ViewerRepo {
 
   @override
   Future<Either<Failure, List<String>>> listTableNames({
-    required DatabaseObject databaseObject,
+    required covariant SQLite3AsyncDatabaseObject databaseObject,
   }) async {
     try {
-      switch (databaseObject) {
-        case SQLite3AsyncDatabaseObject(:final db):
-          final tableNames = await sqLite3AsyncSQLiteSource.listTableNames(
-            db: db,
-          );
-          return Either.right(tableNames);
-      }
+      final tableNames = await sqLite3AsyncSQLiteSource.listTableNames(
+        db: databaseObject.db,
+      );
+      return Either.right(tableNames);
     } catch (error, stackTrace) {
       Loggify.getLogger?.severe(
         "Error while listing table names",
@@ -82,18 +73,15 @@ class SQLiteViewerRepo implements ViewerRepo {
 
   @override
   Future<Either<Failure, DatabaseTable>> getTableInfo({
-    required DatabaseObject databaseObject,
+    required covariant SQLite3AsyncDatabaseObject databaseObject,
     required String tableName,
   }) async {
     try {
-      switch (databaseObject) {
-        case SQLite3AsyncDatabaseObject(:final db):
-          final tableInfo = await sqLite3AsyncSQLiteSource.getTableInfo(
-            db: db,
-            tableName: tableName,
-          );
-          return Either.right(tableInfo);
-      }
+      final tableInfo = await sqLite3AsyncSQLiteSource.getTableInfo(
+        db: databaseObject.db,
+        tableName: tableName,
+      );
+      return Either.right(tableInfo);
     } on NoTableError catch (error, stackTrace) {
       Loggify.getLogger?.severe(
         "Only one row expected, got unexpected length",
@@ -120,16 +108,13 @@ class SQLiteViewerRepo implements ViewerRepo {
 
   @override
   Future<Either<Failure, List<String>>> listViewNames({
-    required DatabaseObject databaseObject,
+    required covariant SQLite3AsyncDatabaseObject databaseObject,
   }) async {
     try {
-      switch (databaseObject) {
-        case SQLite3AsyncDatabaseObject(:final db):
-          final viewNames = await sqLite3AsyncSQLiteSource.listViewNames(
-            db: db,
-          );
-          return Either.right(viewNames);
-      }
+      final viewNames = await sqLite3AsyncSQLiteSource.listViewNames(
+        db: databaseObject.db,
+      );
+      return Either.right(viewNames);
     } catch (error, stackTrace) {
       Loggify.getLogger?.severe(
         "Error while listing view names",
@@ -144,18 +129,15 @@ class SQLiteViewerRepo implements ViewerRepo {
 
   @override
   Future<Either<Failure, DatabaseView>> getViewInfo({
-    required DatabaseObject databaseObject,
+    required covariant SQLite3AsyncDatabaseObject databaseObject,
     required String viewName,
   }) async {
     try {
-      switch (databaseObject) {
-        case SQLite3AsyncDatabaseObject(:final db):
-          final viewInfo = await sqLite3AsyncSQLiteSource.getViewInfo(
-            db: db,
-            viewName: viewName,
-          );
-          return Either.right(viewInfo);
-      }
+      final viewInfo = await sqLite3AsyncSQLiteSource.getViewInfo(
+        db: databaseObject.db,
+        viewName: viewName,
+      );
+      return Either.right(viewInfo);
     } on NoViewError catch (error, stackTrace) {
       Loggify.getLogger?.severe(
         "Only one row expected, got unexpected length",
@@ -174,8 +156,102 @@ class SQLiteViewerRepo implements ViewerRepo {
   }
 
   @override
+  Future<Either<Failure, List<String>>> listIndexNames({
+    required covariant SQLite3AsyncDatabaseObject databaseObject,
+  }) async {
+    try {
+      final indexNames = await sqLite3AsyncSQLiteSource.listIndexNames(
+        db: databaseObject.db,
+      );
+      return Either.right(indexNames);
+    } catch (error, stackTrace) {
+      Loggify.getLogger?.severe(
+        "Unknown error in listIndexNames",
+        error,
+        stackTrace,
+      );
+      return Either.left(GenericFailure(error: error, stackTrace: stackTrace));
+    }
+  }
+
+  @override
+  Future<Either<Failure, DatabaseIndex>> getIndexInfo({
+    required covariant SQLite3AsyncDatabaseObject databaseObject,
+    required String indexName,
+  }) async {
+    try {
+      final indexInfo = await sqLite3AsyncSQLiteSource.getIndexInfo(
+        db: databaseObject.db,
+        indexName: indexName,
+      );
+      return Either.right(indexInfo);
+    } on NoIndexError catch (error, stackTrace) {
+      Loggify.getLogger?.severe(
+        "Only one row expected, got unexpected length",
+        error,
+        stackTrace,
+      );
+      return Either.left(NoIndexFailure());
+    } catch (error, stackTrace) {
+      Loggify.getLogger?.severe(
+        "Unknown error in getIndexInfo",
+        error,
+        stackTrace,
+      );
+      return Either.left(GenericFailure(error: error, stackTrace: stackTrace));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<String>>> listTriggerNames({
+    required covariant SQLite3AsyncDatabaseObject databaseObject,
+  }) async {
+    try {
+      final triggerNames = await sqLite3AsyncSQLiteSource.listTriggerNames(
+        db: databaseObject.db,
+      );
+      return Either.right(triggerNames);
+    } catch (error, stackTrace) {
+      Loggify.getLogger?.severe(
+        "Unknown error in listTriggerNames",
+        error,
+        stackTrace,
+      );
+      return Either.left(GenericFailure(error: error, stackTrace: stackTrace));
+    }
+  }
+
+  @override
+  Future<Either<Failure, DatabaseTrigger>> getTriggerInfo({
+    required covariant SQLite3AsyncDatabaseObject databaseObject,
+    required String triggerName,
+  }) async {
+    try {
+      final triggerInfo = await sqLite3AsyncSQLiteSource.getTriggerInfo(
+        db: databaseObject.db,
+        triggerName: triggerName,
+      );
+      return Either.right(triggerInfo);
+    } on NoTriggerError catch (error, stackTrace) {
+      Loggify.getLogger?.severe(
+        "Only one row expected, got unexpected length",
+        error,
+        stackTrace,
+      );
+      return Either.left(NoTriggerFailure());
+    } catch (error, stackTrace) {
+      Loggify.getLogger?.severe(
+        "Unknown error in getTriggerInfo",
+        error,
+        stackTrace,
+      );
+      return Either.left(GenericFailure(error: error, stackTrace: stackTrace));
+    }
+  }
+
+  @override
   Future<Either<Failure, DatabaseQueryResult>> getRowsOfRelation({
-    required DatabaseObject databaseObject,
+    required covariant SQLite3AsyncDatabaseObject databaseObject,
     required String relationName,
     List<String>? columnsToSelect,
     String? orderBy,
@@ -184,19 +260,16 @@ class SQLiteViewerRepo implements ViewerRepo {
     int? limitRows,
   }) async {
     try {
-      switch (databaseObject) {
-        case SQLite3AsyncDatabaseObject(:final db):
-          final queryResult = await sqLite3AsyncSQLiteSource.getRowsOfRelation(
-            db: db,
-            relationName: relationName,
-            columnsToSelect: columnsToSelect,
-            fromRowNumber: fromRowNumber,
-            limitRows: limitRows,
-            orderBy: orderBy,
-            isDescendingOrder: isDescendingOrder,
-          );
-          return Either.right(queryResult);
-      }
+      final queryResult = await sqLite3AsyncSQLiteSource.getRowsOfRelation(
+        db: databaseObject.db,
+        relationName: relationName,
+        columnsToSelect: columnsToSelect,
+        fromRowNumber: fromRowNumber,
+        limitRows: limitRows,
+        orderBy: orderBy,
+        isDescendingOrder: isDescendingOrder,
+      );
+      return Either.right(queryResult);
     } catch (error, stackTrace) {
       Loggify.getLogger?.severe(
         "Unknown error in getRowsOfRelation",
@@ -209,18 +282,15 @@ class SQLiteViewerRepo implements ViewerRepo {
 
   @override
   Future<Either<Failure, DatabaseQueryResult>> executeRawQuery({
-    required DatabaseObject databaseObject,
+    required covariant SQLite3AsyncDatabaseObject databaseObject,
     required String query,
   }) async {
     try {
-      switch (databaseObject) {
-        case SQLite3AsyncDatabaseObject(:final db):
-          final queryResult = await sqLite3AsyncSQLiteSource.executeRawQuery(
-            db: db,
-            query: query,
-          );
-          return Either.right(queryResult);
-      }
+      final queryResult = await sqLite3AsyncSQLiteSource.executeRawQuery(
+        db: databaseObject.db,
+        query: query,
+      );
+      return Either.right(queryResult);
     } catch (error, stackTrace) {
       Loggify.getLogger?.severe(
         "Unknown error in executeRawQuery",
@@ -354,7 +424,7 @@ ORDER BY
       db: db,
       relationName: viewName,
     );
-    final tableInfoResult = await db.getAll(
+    final viewInfoResult = await db.getAll(
       """ 
 SELECT 
   sql
@@ -367,14 +437,111 @@ AND
     """,
       [viewName],
     );
-    if (tableInfoResult.length != 1) {
+    if (viewInfoResult.length != 1) {
       throw NoViewError();
     }
-    final createViewQuery = tableInfoResult.single["sql"] as String;
+    final createViewQuery = viewInfoResult.single["sql"] as String;
     return DatabaseView(
       viewName: viewName,
       sql: createViewQuery,
       columns: viewColumns,
+    );
+  }
+
+  Future<List<String>> listIndexNames({required SqliteDatabase db}) async {
+    final indicesResult = await db.getAll(""" 
+SELECT
+  name
+FROM
+  sqlite_master
+WHERE
+  type='index'
+ORDER BY 
+  name
+    """);
+    return indicesResult.map((row) => row["name"] as String).toList();
+  }
+
+  Future<DatabaseIndex> getIndexInfo({
+    required SqliteDatabase db,
+    required String indexName,
+  }) async {
+    final indexInfoResult = await db.getAll(
+      """ 
+SELECT 
+  tbl_name, sql
+FROM 
+  sqlite_master 
+WHERE 
+  type='index'
+AND
+  name=?
+    """,
+      [indexName],
+    );
+    if (indexInfoResult.length != 1) {
+      throw NoIndexError();
+    }
+
+    final pragmaIndexInfoResult = await db.getAll(""" 
+PRAGMA index_info("$indexName")
+    """);
+    if (indexInfoResult.isEmpty) {
+      throw NoIndexError();
+    }
+    final createIndexQuery = indexInfoResult.single["sql"] as String?;
+    final onTable = indexInfoResult.single["tbl_name"] as String;
+    final onColumns = pragmaIndexInfoResult
+        .map((e) => e["name"] as String)
+        .toList();
+    return DatabaseIndex(
+      indexName: indexName,
+      sql: createIndexQuery,
+      onTable: onTable,
+      onColumns: onColumns,
+    );
+  }
+
+  Future<List<String>> listTriggerNames({required SqliteDatabase db}) async {
+    final triggersResult = await db.getAll(""" 
+SELECT
+  name
+FROM
+  sqlite_master
+WHERE
+  type='trigger'
+ORDER BY 
+  name
+    """);
+    return triggersResult.map((row) => row["name"] as String).toList();
+  }
+
+  Future<DatabaseTrigger> getTriggerInfo({
+    required SqliteDatabase db,
+    required String triggerName,
+  }) async {
+    final triggerInfoResult = await db.getAll(
+      """ 
+SELECT 
+  tbl_name, sql
+FROM 
+  sqlite_master 
+WHERE 
+  type='trigger'
+AND
+  name=?
+    """,
+      [triggerName],
+    );
+    if (triggerInfoResult.length != 1) {
+      throw NoTriggerError();
+    }
+    final createTriggerQuery = triggerInfoResult.single["sql"] as String;
+    final onTable = triggerInfoResult.single["tbl_name"] as String;
+    return DatabaseTrigger(
+      triggerName: triggerName,
+      sql: createTriggerQuery,
+      onTable: onTable,
     );
   }
 

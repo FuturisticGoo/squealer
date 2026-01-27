@@ -25,6 +25,23 @@ abstract class ViewerRepo {
     required String viewName,
   });
 
+  Future<Either<Failure, List<String>>> listIndexNames({
+    required DatabaseObject databaseObject,
+  });
+  Future<Either<Failure, DatabaseIndex>> getIndexInfo({
+    required DatabaseObject databaseObject,
+    required String indexName,
+  });
+
+  Future<Either<Failure, List<String>>> listTriggerNames({
+    required DatabaseObject databaseObject,
+  });
+  Future<Either<Failure, DatabaseTrigger>> getTriggerInfo({
+    required DatabaseObject databaseObject,
+    required String triggerName,
+  });
+
+
   Future<Either<Failure, DatabaseQueryResult>> getRowsOfRelation({
     required DatabaseObject databaseObject,
     required String relationName,

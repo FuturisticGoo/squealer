@@ -254,7 +254,9 @@ SELECT
 FROM 
   sqlite_master 
 WHERE 
-  type='table';
+  type='table'
+ORDER BY
+  name
     """);
     return tablesResult.map((row) => row["name"] as String).toList();
   }
@@ -338,6 +340,8 @@ FROM
   sqlite_master
 WHERE
   type='view'
+ORDER BY 
+  name
     """);
     return viewsResult.map((row) => row["name"] as String).toList();
   }

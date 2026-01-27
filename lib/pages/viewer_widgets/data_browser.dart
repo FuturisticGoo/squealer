@@ -40,17 +40,36 @@ class _DataBrowserState extends State<DataBrowser>
                       return LoadingWidget();
                     case DataBrowserLoaded(:final tables, :final views):
                       return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          DropdownButtonFormField(
-                            decoration: InputDecoration(
-                              border: OutlineInputBorder(),
-                              label: Text("Relation: "),
-                            ),
-                            items: [...tables, ...views].map((e) {
-                              return DropdownMenuItem(value: e, child: Text(e));
-                            }).toList(),
-                            onChanged: (value) async {
+                          DropdownMenu(
+                            enableFilter: true,
+                            leadingIcon: const Icon(Icons.search),
+                            menuHeight: MediaQuery.heightOf(context) * 0.7,
+                            // requestFocusOnTap: true,
+                            // width: double.infinity,
+                            expandedInsets: EdgeInsets.zero,
+                            // decoration: InputDecoration(
+                            //   border: OutlineInputBorder(),
+                            // ),
+                            label: Text("Relation: "),
+                            dropdownMenuEntries: [
+                              ...tables.map((e) {
+                                return DropdownMenuEntry(
+                                  value: e,
+                                  label: e,
+                                  leadingIcon: Text("Table"),
+                                );
+                              }),
+                              ...views.map(
+                                (e) => DropdownMenuEntry(
+                                  value: e,
+                                  label: e,
+                                  leadingIcon: Text("View"),
+                                ),
+                              ),
+                            ],
+                            onSelected: (value) async {
                               if (value != null) {
                                 await context
                                     .read<DataBrowserCubit>()

@@ -412,7 +412,8 @@ AND
     required SqliteDatabase db,
     required String tableName,
   }) async {
-    return _getSchemaInfo(db: db, schemaName: tableName) as DatabaseTable;
+    return (await _getSchemaInfo(db: db, schemaName: tableName))
+        as DatabaseTable;
   }
 
   Future<List<String>> listViewNames({required SqliteDatabase db}) async {
@@ -433,7 +434,7 @@ ORDER BY
     required SqliteDatabase db,
     required String viewName,
   }) async {
-    return _getSchemaInfo(db: db, schemaName: viewName) as DatabaseView;
+    return (await _getSchemaInfo(db: db, schemaName: viewName)) as DatabaseView;
   }
 
   Future<List<String>> listIndexNames({required SqliteDatabase db}) async {

@@ -46,7 +46,7 @@ class _DataBrowserState extends State<DataBrowser>
                             enableFilter: true,
                             leadingIcon: const Icon(Icons.search),
                             menuHeight: MediaQuery.heightOf(context) * 0.7,
-                            // requestFocusOnTap: true,
+                            requestFocusOnTap: true,
                             // width: double.infinity,
                             expandedInsets: EdgeInsets.zero,
                             // decoration: InputDecoration(

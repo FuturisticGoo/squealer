@@ -9,6 +9,7 @@ import 'package:squealer/core/entities/database_data_entities.dart';
 import 'package:squealer/core/entities/export_format.dart';
 import 'package:squealer/core/entities/export_progress_type.dart';
 import 'package:squealer/core/entities/failure_success.dart';
+import 'package:squealer/core/sql_writer.dart';
 import 'package:squealer/data/exporter_repo.dart';
 
 class ExporterRepoImpl implements ExporterRepo {
@@ -76,6 +77,7 @@ class ExporterSource {
     required ExportFormat exportFormat,
   }) async {
     final globalProgressPipe = GlobalProgressPipe.instance;
+    final appCacheDir = await getAppCacheDir();
     switch (exportFormat) {
       case CSVFormat(
         :final delimiter,
@@ -88,7 +90,6 @@ class ExporterSource {
           textDelimiter: stringDelimiter,
           eol: endOfLine,
         );
-        final appCacheDir = await getAppCacheDir();
         final outputFileName =
             "${DateTime.now().millisecondsSinceEpoch.toString()}.csv";
         final outputFile = await CrossFileWriter.openFileForWriting(
@@ -133,7 +134,6 @@ class ExporterSource {
         :final storeColumnNames,
         :final indentation,
       ):
-        final appCacheDir = await getAppCacheDir();
         final outputFileName =
             "${DateTime.now().millisecondsSinceEpoch.toString()}.json";
         final outputFile = await CrossFileWriter.openFileForWriting(
@@ -163,6 +163,45 @@ class ExporterSource {
           progressEvent: ExportingRowsUpdate(finished: 2, total: 2),
         );
         globalProgressPipe.addProgress(progressEvent: ExportingRowsFinished());
+      case SQLFormat(:final storeSchema, :final storeData):
+        if (databaseQueryResult.runOnSchema == null) {
+          globalProgressPipe.addProgress(progressEvent: ExportingRowsError());
+          globalProgressPipe.addProgress(
+            progressEvent: ExportingRowsFinished(),
+          );
+          throw NoSchemaMentionedError();
+        }
+        final outputFileName =
+            "${DateTime.now().millisecondsSinceEpoch.toString()}.sql";
+        final outputFile = await CrossFileWriter.openFileForWriting(
+          fileName: outputFileName,
+          cacheDirectory: appCacheDir,
+        );
+        final outputBuffer = SimpleSQLiteCommandWriter();
+        globalProgressPipe.addProgress(
+          progressEvent: ExportingRowsUpdate(finished: 0, total: 2),
+        );
+        if (storeSchema) {
+          outputBuffer.writeRawSql(databaseQueryResult.runOnSchema!.sql);
+        }
+        globalProgressPipe.addProgress(
+          progressEvent: ExportingRowsUpdate(finished: 1, total: 2),
+        );
+        if (storeData) {
+          for (final row in databaseQueryResult.rows) {
+            outputBuffer.writeInsert(
+              schemaName: databaseQueryResult.runOnSchema!.schemaName,
+              row: row.rowData,
+            );
+          }
+        }
+        globalProgressPipe.addProgress(
+          progressEvent: ExportingRowsUpdate(finished: 2, total: 2),
+        );
+        await outputFile.write(outputBuffer.toString());
+        await outputFile.close();
+        globalProgressPipe.addProgress(progressEvent: ExportingRowsFinished());
+        
     }
   }
 

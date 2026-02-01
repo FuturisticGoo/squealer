@@ -2,29 +2,43 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:squealer/core/entities/export_format.dart';
 
-enum _ExportType { csv, json }
+enum ExportType {
+  csv(displayName: "CSV"),
+  json(displayName: "JSON"),
+  sql(displayName: "SQL");
+
+  const ExportType({required this.displayName});
+  final String displayName;
+}
 
 enum _EndOfLine { crlf, lf }
 
-Future<ExportFormat?> showExportDialog(BuildContext context) {
+Future<ExportFormat?> showExportDialog(
+  BuildContext context, {
+  List<ExportType>? allowedExportTypes,
+}) {
   return showAdaptiveDialog<ExportFormat?>(
     context: context,
     builder: (context) {
-      return ExportDialog();
+      return ExportDialog(
+        allowedExportTypes: allowedExportTypes ?? ExportType.values,
+      );
     },
   );
 }
 
 class ExportDialog extends StatefulWidget {
-  const ExportDialog({super.key});
+  final List<ExportType> allowedExportTypes;
+  const ExportDialog({super.key, required this.allowedExportTypes});
 
   @override
   State<ExportDialog> createState() => _ExportDialogState();
 }
 
 class _ExportDialogState extends State<ExportDialog> {
-  _ExportType _exportType = _ExportType.csv;
+  ExportType _exportType = ExportType.csv;
   bool _exportColumnNames = true;
+  bool _exportRows = true;
   bool _exportQuery = true;
   final _delimiterController = TextEditingController(text: ",");
   final _stringDelimiter = TextEditingController(text: '"');
@@ -52,18 +66,14 @@ class _ExportDialogState extends State<ExportDialog> {
               children: [
                 ListTile(
                   title: Text("Export format"),
-                  trailing: DropdownButton<_ExportType>(
+                  trailing: DropdownButton<ExportType>(
                     value: _exportType,
-                    items: [
-                      DropdownMenuItem(
-                        value: _ExportType.csv,
-                        child: Text("CSV"),
-                      ),
-                      DropdownMenuItem(
-                        value: _ExportType.json,
-                        child: Text("JSON"),
-                      ),
-                    ],
+                    items: widget.allowedExportTypes.map((e) {
+                      return DropdownMenuItem(
+                        value: e,
+                        child: Text(e.displayName),
+                      );
+                    }).toList(),
                     onChanged: (value) {
                       setState(() {
                         if (value != null) {
@@ -74,7 +84,11 @@ class _ExportDialogState extends State<ExportDialog> {
                   ),
                 ),
                 ListTile(
-                  title: Text("Export column headers"),
+                  title: Text(
+                    (_exportType == ExportType.sql)
+                        ? "Export schema"
+                        : "Export column headers",
+                  ),
                   trailing: DropdownButton<bool>(
                     value: _exportColumnNames,
                     items: [
@@ -91,7 +105,7 @@ class _ExportDialogState extends State<ExportDialog> {
                   ),
                 ),
                 ...switch (_exportType) {
-                  _ExportType.csv => [
+                  ExportType.csv => [
                     ListTile(
                       title: Text("Field delimiter"),
 
@@ -141,7 +155,7 @@ class _ExportDialogState extends State<ExportDialog> {
                       ),
                     ),
                   ],
-                  _ExportType.json => [
+                  ExportType.json => [
                     ListTile(
                       title: Text("Export sql query"),
                       trailing: DropdownButton<bool>(
@@ -176,6 +190,25 @@ class _ExportDialogState extends State<ExportDialog> {
                       ),
                     ),
                   ],
+                  ExportType.sql => [
+                    ListTile(
+                      title: Text("Export rows"),
+                      trailing: DropdownButton<bool>(
+                        value: _exportRows,
+                        items: [
+                          DropdownMenuItem(value: true, child: Text("Yes")),
+                          DropdownMenuItem(value: false, child: Text("No")),
+                        ],
+                        onChanged: (value) {
+                          setState(() {
+                            if (value != null) {
+                              _exportRows = value;
+                            }
+                          });
+                        },
+                      ),
+                    ),
+                  ],
                 },
                 SizedBox(height: 10),
                 Row(
@@ -192,7 +225,7 @@ class _ExportDialogState extends State<ExportDialog> {
                       onPressed: () {
                         ExportFormat exportFormat;
                         switch (_exportType) {
-                          case _ExportType.csv:
+                          case ExportType.csv:
                             exportFormat = CSVFormat(
                               delimiter: _delimiterController.text,
                               endOfLine: switch (_endOfLine) {
@@ -202,13 +235,18 @@ class _ExportDialogState extends State<ExportDialog> {
                               stringDelimiter: _stringDelimiter.text,
                               storeColumnNames: _exportColumnNames,
                             );
-                          case _ExportType.json:
+                          case ExportType.json:
                             exportFormat = JSONFormat(
                               storeQuery: _exportQuery,
                               indentation:
                                   int.tryParse(_indentationController.text) ??
                                   4,
                               storeColumnNames: _exportColumnNames,
+                            );
+                          case ExportType.sql:
+                            exportFormat = SQLFormat(
+                              storeSchema: _exportColumnNames,
+                              storeData: _exportRows,
                             );
                         }
                         Navigator.pop(context, exportFormat);

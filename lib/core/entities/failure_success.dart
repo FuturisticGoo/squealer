@@ -8,7 +8,6 @@ class NoIndexError extends Error {}
 
 class NoTriggerError extends Error {}
 
-
 class InvalidSQLStatementError extends Error {}
 
 class NoSettingsFoundError extends Error {}
@@ -16,6 +15,8 @@ class NoSettingsFoundError extends Error {}
 class NoMetadataFoundError extends Error {}
 
 class InvalidPathError extends Error {}
+
+class NoSchemaMentionedError extends Error {}
 
 class Failure {
   const Failure();
@@ -66,6 +67,5 @@ class NoViewFailure extends Failure {}
 class NoIndexFailure extends Failure {}
 
 class NoTriggerFailure extends Failure {}
-
 
 class Success {}

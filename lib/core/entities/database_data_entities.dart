@@ -4,21 +4,34 @@ class DatabaseQueryResult extends Equatable {
   final List<String> columnNames;
   final List<TableRow> rows;
   final String originalQuery;
+  final DatabaseSchema? runOnSchema;
   const DatabaseQueryResult({
     required this.columnNames,
     required this.rows,
     required this.originalQuery,
+    required this.runOnSchema,
   });
   @override
-  List<Object?> get props => [columnNames, rows, originalQuery];
+  List<Object?> get props => [columnNames, rows, originalQuery, runOnSchema];
 }
 
-class DatabaseTable extends Equatable {
-  final String tableName;
+sealed class DatabaseSchema extends Equatable {
+  String get schemaName;
+  List<TableColumn> get columns;
+  String get sql;
+  const DatabaseSchema();
+}
+
+class DatabaseTable extends DatabaseSchema {
+  @override
+  final String schemaName;
+  String get tableName => schemaName;
+  @override
   final List<TableColumn> columns;
+  @override
   final String sql;
   const DatabaseTable({
-    required this.tableName,
+    required this.schemaName,
     required this.columns,
     required this.sql,
   });
@@ -26,17 +39,21 @@ class DatabaseTable extends Equatable {
   List<Object?> get props => [tableName, columns, sql];
 }
 
-class DatabaseView extends Equatable {
-  final String viewName;
+class DatabaseView extends DatabaseSchema {
+  @override
+  final String schemaName;
+  String get viewName => schemaName;
+  @override
   final List<TableColumn> columns;
+  @override
   final String sql;
   const DatabaseView({
-    required this.viewName,
-    required this.sql,
+    required this.schemaName,
     required this.columns,
+    required this.sql,
   });
   @override
-  List<Object?> get props => [viewName, sql, columns];
+  List<Object?> get props => [viewName, columns, sql];
 }
 
 class DatabaseIndex extends Equatable {

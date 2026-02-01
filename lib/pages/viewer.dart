@@ -110,7 +110,13 @@ class _ViewerState extends State<Viewer> with TickerProviderStateMixin {
                             context.read<QueryResultCubit>().state
                                 is QueryResultExecuteResult,
                         onTap: () async {
-                          final exportFormat = await showExportDialog(context);
+                          final exportFormat = await showExportDialog(
+                            context,
+                            allowedExportTypes: [
+                              ExportType.csv,
+                              ExportType.json,
+                            ],
+                          );
                           if (context.mounted && exportFormat != null) {
                             showProgressDialog<
                               ExportingRowsUpdate,

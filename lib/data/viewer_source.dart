@@ -373,33 +373,46 @@ ORDER BY
     return tableColumns;
   }
 
+  Future<DatabaseSchema> _getSchemaInfo({
+    required SqliteDatabase db,
+    required String schemaName,
+  }) async {
+    final columns = await _getTableColumnInfo(db: db, relationName: schemaName);
+    final schemaResult = await db.get(
+      """ 
+SELECT 
+  sql, type
+FROM 
+  sqlite_master 
+WHERE 
+  ( type='table' OR type='view' )
+AND
+  name=?
+    """,
+      [schemaName],
+    );
+    if (schemaResult["type"] == "table") {
+      return DatabaseTable(
+        schemaName: schemaName,
+        columns: columns,
+        sql: schemaResult["sql"] as String,
+      );
+    } else if (schemaResult["type"] == "view") {
+      return DatabaseView(
+        schemaName: schemaName,
+        columns: columns,
+        sql: schemaResult["sql"] as String,
+      );
+    } else {
+      throw UnsupportedError("Wrong type in sqlite_master");
+    }
+  }
+
   Future<DatabaseTable> getTableInfo({
     required SqliteDatabase db,
     required String tableName,
   }) async {
-    final tableColumns = await _getTableColumnInfo(
-      db: db,
-      relationName: tableName,
-    );
-    final tableSchemaResult = await db.get(
-      """ 
-SELECT 
-  sql
-FROM 
-  sqlite_master 
-WHERE 
-  type='table'
-AND
-  name=?
-    """,
-      [tableName],
-    );
-
-    return DatabaseTable(
-      tableName: tableName,
-      columns: tableColumns,
-      sql: tableSchemaResult["sql"] as String,
-    );
+    return _getSchemaInfo(db: db, schemaName: tableName) as DatabaseTable;
   }
 
   Future<List<String>> listViewNames({required SqliteDatabase db}) async {
@@ -420,32 +433,7 @@ ORDER BY
     required SqliteDatabase db,
     required String viewName,
   }) async {
-    final viewColumns = await _getTableColumnInfo(
-      db: db,
-      relationName: viewName,
-    );
-    final viewInfoResult = await db.getAll(
-      """ 
-SELECT 
-  sql
-FROM 
-  sqlite_master 
-WHERE 
-  type='view'
-AND
-  name=?
-    """,
-      [viewName],
-    );
-    if (viewInfoResult.length != 1) {
-      throw NoViewError();
-    }
-    final createViewQuery = viewInfoResult.single["sql"] as String;
-    return DatabaseView(
-      viewName: viewName,
-      sql: createViewQuery,
-      columns: viewColumns,
-    );
+    return _getSchemaInfo(db: db, schemaName: viewName) as DatabaseView;
   }
 
   Future<List<String>> listIndexNames({required SqliteDatabase db}) async {
@@ -612,6 +600,7 @@ AND
       columnNames: columnNames,
       rows: processedRows,
       originalQuery: queryBuilder.toString(),
+      runOnSchema: await _getSchemaInfo(db: db, schemaName: relationName),
     );
   }
 
@@ -636,6 +625,7 @@ AND
       columnNames: rawQueryResult.columnNames,
       rows: processedRows,
       originalQuery: query,
+      runOnSchema: null,
     );
   }
 }

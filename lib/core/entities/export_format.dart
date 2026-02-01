@@ -25,3 +25,9 @@ class JSONFormat implements ExportFormat {
     this.indentation = 4,
   });
 }
+
+class SQLFormat implements ExportFormat {
+  final bool storeSchema;
+  final bool storeData;
+  const SQLFormat({required this.storeSchema, required this.storeData});
+}

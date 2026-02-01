@@ -3,9 +3,9 @@
 Explore SQLite database files.   
 
 ### Features
-- Show schema of tables and views
+- View schema of tables, views, indices and triggers.
 - Show data in the tables and views
 - Execute queries  
-- Export to CSV or JSON
+- Export to CSV, JSON and SQL
 
 Read and write commands are supported.

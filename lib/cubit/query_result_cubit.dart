@@ -26,7 +26,7 @@ class QueryResultCubit extends Cubit<QueryResultState> {
 
   Future<void> exportData({required ExportFormat exportFormat}) async {
     if (state case QueryResultExecuteResult(:final queryResult)) {
-      final exportResult = await exporterRepo.exportTable(
+      final exportResult = await exporterRepo.exportQueryResult(
         databaseQueryResult: queryResult,
         exportFormat: exportFormat,
       );

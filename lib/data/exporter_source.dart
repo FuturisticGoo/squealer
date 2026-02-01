@@ -16,12 +16,12 @@ class ExporterRepoImpl implements ExporterRepo {
   final ExporterSource exporterSource;
   const ExporterRepoImpl({required this.exporterSource});
   @override
-  Future<Either<Failure, Success>> exportTable({
+  Future<Either<Failure, Success>> exportQueryResult({
     required DatabaseQueryResult databaseQueryResult,
     required ExportFormat exportFormat,
   }) async {
     try {
-      await exporterSource.exportTable(
+      await exporterSource.exportQueryResult(
         databaseQueryResult: databaseQueryResult,
         exportFormat: exportFormat,
       );
@@ -72,7 +72,7 @@ class ExporterRepoImpl implements ExporterRepo {
 
 class ExporterSource {
   const ExporterSource();
-  Future<void> exportTable({
+  Future<void> exportQueryResult({
     required DatabaseQueryResult databaseQueryResult,
     required ExportFormat exportFormat,
   }) async {
@@ -201,7 +201,6 @@ class ExporterSource {
         await outputFile.write(outputBuffer.toString());
         await outputFile.close();
         globalProgressPipe.addProgress(progressEvent: ExportingRowsFinished());
-        
     }
   }
 

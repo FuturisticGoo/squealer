@@ -4,7 +4,7 @@ import 'package:squealer/core/entities/export_format.dart';
 import 'package:squealer/core/entities/failure_success.dart';
 
 abstract class ExporterRepo {
-  Future<Either<Failure, Success>> exportTable({
+  Future<Either<Failure, Success>> exportQueryResult({
     required DatabaseQueryResult databaseQueryResult,
     required ExportFormat exportFormat,
   });

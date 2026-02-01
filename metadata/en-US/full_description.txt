@@ -2,10 +2,10 @@
 
 Features:
 <ul>
-<li>View schema of tables and views.</li>
+<li>View schema of tables, views, indices and triggers.</li>
 <li>Show records from tables and views.</li>
 <li>Execute SQL queries</li>
-<li>Export to CSV or JSON</li>
+<li>Export to CSV, JSON and SQL</li>
 </ul>
 
 Read and write commands are supported.

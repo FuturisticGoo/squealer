@@ -112,7 +112,7 @@ class DataBrowserCubit extends Cubit<DataBrowserState> {
       );
       switch (queryResult) {
         case Right(value: final databaseQueryResult):
-          final exportResult = await exporterRepo.exportTable(
+          final exportResult = await exporterRepo.exportQueryResult(
             databaseQueryResult: databaseQueryResult,
             exportFormat: exportFormat,
           );

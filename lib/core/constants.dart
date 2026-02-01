@@ -5,7 +5,7 @@ const allowedExtension = ["sqlite", "db"];
 const appDatabase = "squealer.sqlite";
 const appName = "Squealer";
 const appId = "futuristicgoo.squealer";
-final appVersion = SemVer.fromString("0.1.1");
+final appVersion = SemVer.fromString("0.1.2");
 const defaultRowFetchCount = 50;
 
 const jsonExportSquealerVersionKey = "_squealer_version";

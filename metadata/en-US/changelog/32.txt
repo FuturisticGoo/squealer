@@ -1,0 +1,7 @@
+Release Numéro Trois (3)
+
+Added support for showing info about Indices and Triggers
+Now tables tables, views, indices and triggers will show up in sorted order
+Added searching for table/view names in data explorer
+Added (experimental) support for export of tables to sql commands
+Show count of tables, view, etc in brackets

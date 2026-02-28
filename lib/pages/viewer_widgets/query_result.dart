@@ -6,7 +6,8 @@ import 'package:squealer/pages/viewer_widgets/loading_widget.dart';
 import 'package:trina_grid/trina_grid.dart';
 
 class QueryResult extends StatefulWidget {
-  const QueryResult({super.key});
+  final TextEditingController queryTextEditingController;
+  const QueryResult({super.key, required this.queryTextEditingController});
 
   @override
   State<QueryResult> createState() => _QueryResultState();
@@ -14,14 +15,6 @@ class QueryResult extends StatefulWidget {
 
 class _QueryResultState extends State<QueryResult>
     with AutomaticKeepAliveClientMixin {
-  final _queryTextEditingController = TextEditingController();
-
-  @override
-  void dispose() {
-    _queryTextEditingController.dispose();
-    super.dispose();
-  }
-
   @override
   bool get wantKeepAlive => true;
 
@@ -38,30 +31,34 @@ class _QueryResultState extends State<QueryResult>
               return LoadingWidget();
             case QueryResultError():
               return Center(child: Text("Unknown error"));
-            case QueryResultDatabaseLoaded():
+            case QueryResultDatabaseLoaded(:final savedStatements):
               return Column(
                 mainAxisAlignment: MainAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  TextFormField(
-                    controller: _queryTextEditingController,
-                    minLines: 1,
-                    maxLines: 5,
-                    decoration: InputDecoration(
+                  DropdownMenu(
+                    controller: widget.queryTextEditingController,
+                    maxLines: null,
+                    enableFilter: true,
+                    menuHeight: MediaQuery.heightOf(context) * 0.7,
+                    requestFocusOnTap: true,
+                    expandedInsets: EdgeInsets.zero,
+                    decorationBuilder: (context, controller) => InputDecoration(
                       border: OutlineInputBorder(),
                       label: Text("Query"),
                       suffixIcon: Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: IconButton(
                           onPressed: () async {
-                            if (_queryTextEditingController.text
+                            if (widget.queryTextEditingController.text
                                 .trim()
                                 .isNotEmpty) {
                               await context
                                   .read<QueryResultCubit>()
                                   .executeQuery(
-                                    sqlQuery: _queryTextEditingController.text,
+                                    sqlQuery:
+                                        widget.queryTextEditingController.text,
                                   );
                             }
                           },
@@ -69,7 +66,54 @@ class _QueryResultState extends State<QueryResult>
                         ),
                       ),
                     ),
+                    dropdownMenuEntries: savedStatements.map((statement) {
+                      return DropdownMenuEntry(
+                        value: statement,
+                        label: statement,
+                        trailingIcon: IconButton(
+                          onPressed: () async {
+                            await context
+                                .read<QueryResultCubit>()
+                                .removeSQLStatement(statement: statement);
+                          },
+                          icon: Icon(Icons.close),
+                        ),
+                        // leadingIcon: Text("Table"),
+                      );
+                    }).toList(),
+
+                    onSelected: (value) async {
+                      if (value != null) {
+                        widget.queryTextEditingController.text = value;
+                      }
+                    },
                   ),
+                  // TextFormField(
+                  //   controller: _queryTextEditingController,
+                  //   minLines: 1,
+                  //   maxLines: 5,
+                  //   decoration: InputDecoration(
+                  //     border: OutlineInputBorder(),
+                  //     label: Text("Query"),
+                  //     suffixIcon: Padding(
+                  //       padding: const EdgeInsets.all(8.0),
+                  //       child: IconButton(
+                  //         onPressed: () async {
+                  //           if (_queryTextEditingController.text
+                  //               .trim()
+                  //               .isNotEmpty) {
+                  //             await context
+                  //                 .read<QueryResultCubit>()
+                  //                 .executeQuery(
+                  //                   sqlQuery: _queryTextEditingController.text,
+                  //                 );
+                  //           }
+                  //         },
+                  //         icon: Icon(Icons.send),
+                  //       ),
+                  //     ),
+                  //   ),
+                  // ),
                   SizedBox(height: 20),
                   switch (state) {
                     QueryResultExecuting() => LoadingWidget(

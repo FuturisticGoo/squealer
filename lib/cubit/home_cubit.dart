@@ -12,58 +12,70 @@ class HomeCubit extends Cubit<HomeState> {
   HomeCubit({required this.filePickerRepository, required this.appDataRepo})
     : super(HomeInitial()) {
     emit(HomeLoading());
-    _loadedRecentDatabases();
+    loadedRecentDatabases();
   }
 
-  Future<void> _loadedRecentDatabases() async {
+  Future<void> loadedRecentDatabases() async {
     final recentDatabasesResult = await appDataRepo.getRecentDatabases();
     switch (recentDatabasesResult) {
       case Right(value: final recentDatabases):
-        if (state case HomeDatabaseFilePicked(:final databaseInfo)) {
+        emit(HomeLoaded(recentDatabases: recentDatabases));
+      case Left():
+        emit(HomeLoaded(recentDatabases: []));
+    }
+  }
+
+  Future<void> getDatabaseFromContentUri({required Uri contentUri}) async {
+    if (state case HomeLoaded(:final recentDatabases)) {
+      emit(HomeLoading());
+      final filePickerResult = await filePickerRepository
+          .getDatabaseFromContentUri(contentUri: contentUri);
+      switch (filePickerResult) {
+        case Right(value: final databaseInfo):
           emit(
             HomeDatabaseFilePicked(
               databaseInfo: databaseInfo,
               recentDatabases: recentDatabases,
             ),
           );
-        }
-        emit(HomeLoaded(recentDatabases: recentDatabases));
-      case Left():
-        emit(HomeLoaded());
-    }
-  }
-
-  Future<void> getDatabaseFromContentUri({required Uri contentUri}) async {
-    emit(HomeLoading());
-    final filePickerResult = await filePickerRepository
-        .getDatabaseFromContentUri(contentUri: contentUri);
-    switch (filePickerResult) {
-      case Right(value: final databaseInfo):
-        emit(HomeDatabaseFilePicked(databaseInfo: databaseInfo));
-      case Left():
-        emit(HomeLoaded());
+        case Left():
+          emit(HomeLoaded(recentDatabases: recentDatabases));
+      }
     }
   }
 
   Future<void> getDatabaseFromFilePath({required String path}) async {
-    emit(HomeLoading());
-    final filePickerResult = await filePickerRepository.getDatabaseFromFilePath(
-      filePath: path,
-    );
-    if (filePickerResult case Right(value: final databaseInfo)) {
-      emit(HomeDatabaseFilePicked(databaseInfo: databaseInfo));
-    } else {
-      emit(HomeLoaded());
+    if (state case HomeLoaded(:final recentDatabases)) {
+      emit(HomeLoading());
+      final filePickerResult = await filePickerRepository
+          .getDatabaseFromFilePath(filePath: path);
+      if (filePickerResult case Right(value: final databaseInfo)) {
+        emit(
+          HomeDatabaseFilePicked(
+            databaseInfo: databaseInfo,
+            recentDatabases: recentDatabases,
+          ),
+        );
+      } else {
+        emit(HomeLoaded(recentDatabases: recentDatabases));
+      }
     }
   }
 
   Future<void> pickDatabaseFile() async {
-    emit(HomeLoading());
-    final filePickerResult = await filePickerRepository.pickDatabaseFile();
-    if (filePickerResult case Right(value: final databaseInfo)) {
-      emit(HomeDatabaseFilePicked(databaseInfo: databaseInfo));
-    } else {
-      emit(HomeLoaded());
+    if (state case HomeLoaded(:final recentDatabases)) {
+      emit(HomeLoading());
+      final filePickerResult = await filePickerRepository.pickDatabaseFile();
+      if (filePickerResult case Right(value: final databaseInfo)) {
+        emit(
+          HomeDatabaseFilePicked(
+            databaseInfo: databaseInfo,
+            recentDatabases: recentDatabases,
+          ),
+        );
+      } else {
+        emit(HomeLoaded(recentDatabases: recentDatabases));
+      }
     }
   }
 
@@ -74,7 +86,7 @@ class HomeCubit extends Cubit<HomeState> {
       :final recentDatabases,
     ) when !recentDatabases.contains(databaseInfo)) {
       await appDataRepo.saveDatabaseToRecent(databaseInfo: databaseInfo);
-      await _loadedRecentDatabases();
+      await loadedRecentDatabases();
     }
   }
 
@@ -83,7 +95,7 @@ class HomeCubit extends Cubit<HomeState> {
   }) async {
     if (state case HomeLoaded()) {
       await appDataRepo.removeDatabaseFromRecent(databaseInfo: databaseInfo);
-      await _loadedRecentDatabases();
+      await loadedRecentDatabases();
     }
   }
 }

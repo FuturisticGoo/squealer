@@ -10,7 +10,7 @@ class HomeLoading extends HomeState {}
 
 class HomeLoaded extends HomeState with EquatableMixin {
   final List<DatabaseInfo> recentDatabases;
-  const HomeLoaded({this.recentDatabases = const []});
+  const HomeLoaded({required this.recentDatabases});
   @override
   List<Object?> get props => [recentDatabases];
 }
@@ -19,8 +19,8 @@ class HomeDatabaseFilePicked extends HomeLoaded with EquatableMixin {
   final DatabaseInfo databaseInfo;
   const HomeDatabaseFilePicked({
     required this.databaseInfo,
-    super.recentDatabases,
+    required super.recentDatabases,
   });
   @override
-  List<Object?> get props => [databaseInfo];
+  List<Object?> get props => [super.props, databaseInfo];
 }

@@ -25,7 +25,7 @@ sealed class DatabaseInfo extends Equatable {
   String get type => runtimeType.toString();
   const DatabaseInfo({required this.databaseUri});
   @override
-  List<Object?> get props => [databaseUri];
+  List<Object?> get props => [databaseUri.toString()];
   Map<String, dynamic> toJson();
   factory DatabaseInfo.fromJson(Map<String, dynamic> json) {
     final typeString = json["type"];

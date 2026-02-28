@@ -17,6 +17,7 @@ import 'package:squealer/pages/viewer_widgets/export_dialog.dart';
 import 'package:squealer/pages/viewer_widgets/progress_dialog.dart';
 import 'package:squealer/pages/viewer_widgets/query_result.dart';
 import 'package:squealer/pages/viewer_widgets/structure_listing.dart';
+import 'package:futuristicgoo_utils/futuristicgoo_utils.dart';
 
 class Viewer extends StatefulWidget {
   final DatabaseInfo databaseInfo;
@@ -28,15 +29,17 @@ class Viewer extends StatefulWidget {
 
 class _ViewerState extends State<Viewer>
     with TickerProviderStateMixin, WidgetsBindingObserver {
+  late final TabController _tabController;
+  final _sqlQueryTextEditingController = TextEditingController();
+  bool isTabControllerListenerRegistered = false;
+  ViewerCubit? _viewerCubit;
+
   @override
   Future<AppExitResponse> didRequestAppExit() async {
     await _viewerCubit?.closeDatabase();
     return super.didRequestAppExit();
   }
 
-  late final TabController _tabController;
-  bool isTabControllerListenerRegistered = false;
-  ViewerCubit? _viewerCubit;
   @override
   void initState() {
     super.initState();
@@ -46,6 +49,7 @@ class _ViewerState extends State<Viewer>
   @override
   void dispose() {
     _viewerCubit?.closeDatabase();
+    _sqlQueryTextEditingController.dispose();
     super.dispose();
   }
 
@@ -70,8 +74,11 @@ class _ViewerState extends State<Viewer>
               DataBrowserCubit(viewerRepo: sl(), exporterRepo: sl()),
         ),
         BlocProvider(
-          create: (context) =>
-              QueryResultCubit(viewerRepo: sl(), exporterRepo: sl()),
+          create: (context) => QueryResultCubit(
+            viewerRepo: sl(),
+            exporterRepo: sl(),
+            appDataRepo: sl(),
+          ),
         ),
       ],
       child: SafeArea(
@@ -155,6 +162,26 @@ class _ViewerState extends State<Viewer>
                           leading: Icon(Icons.ios_share),
                         ),
                       ),
+                    if (_tabController.index == 2)
+                      PopupMenuItem(
+                        enabled:
+                            context.read<QueryResultCubit>().state
+                                is QueryResultDatabaseLoaded,
+                        onTap: () async {
+                          await context
+                              .read<QueryResultCubit>()
+                              .saveSQLStatement(
+                                statement: _sqlQueryTextEditingController.text,
+                              );
+                          if (context.mounted) {
+                            showSnackBar(context, text: "Saved statement");
+                          }
+                        },
+                        child: ListTile(
+                          title: Text("Save statement"),
+                          leading: Icon(Icons.save),
+                        ),
+                      ),
                   ];
                 },
               ),
@@ -214,7 +241,10 @@ class _ViewerState extends State<Viewer>
                               children: [
                                 StructureListing(),
                                 DataBrowser(),
-                                QueryResult(),
+                                QueryResult(
+                                  queryTextEditingController:
+                                      _sqlQueryTextEditingController,
+                                ),
                               ],
                             ),
                           ),

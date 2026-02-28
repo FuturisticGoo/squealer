@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -24,7 +26,14 @@ class Viewer extends StatefulWidget {
   State<Viewer> createState() => _ViewerState();
 }
 
-class _ViewerState extends State<Viewer> with TickerProviderStateMixin {
+class _ViewerState extends State<Viewer>
+    with TickerProviderStateMixin, WidgetsBindingObserver {
+  @override
+  Future<AppExitResponse> didRequestAppExit() async {
+    await _viewerCubit?.closeDatabase();
+    return super.didRequestAppExit();
+  }
+
   late final TabController _tabController;
   bool isTabControllerListenerRegistered = false;
   ViewerCubit? _viewerCubit;

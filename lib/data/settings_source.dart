@@ -87,11 +87,9 @@ class SettingsRepoImpl implements SettingsRepo {
 
 class SqliteSettingsSource {
   final SqliteDatabase db;
-  SqliteSettingsSource({required this.db}) {
-    _ensureTables();
-  }
+  SqliteSettingsSource({required this.db});
 
-  Future<void> _ensureTables() async {
+  Future<void> ensureTables() async {
     await db.execute("""
 CREATE TABLE IF NOT EXISTS 
   ${_SqlNames.settingsTableName} 
@@ -112,7 +110,6 @@ CREATE TABLE IF NOT EXISTS
   }
 
   Future<SquealerSettings> getSettings() async {
-    await _ensureTables();
     final settingsRows = await db.execute(""" 
 SELECT 
   ${_SqlNames.settingsIdColumnName}, ${_SqlNames.settingsValueColumnName}
@@ -192,7 +189,6 @@ VALUES
   }
 
   Future<void> saveSettings({required SquealerSettings newSettings}) async {
-    await _ensureTables();
     await _insertSetting(
       id: _SqlNames.settingsRowFetchCount,
       value: newSettings.rowFetchCount.toString(),
@@ -200,7 +196,6 @@ VALUES
   }
 
   Future<SquealerMetadata> getMetadata() async {
-    await _ensureTables();
     final metadataRows = await db.execute(""" 
 SELECT 
   ${_SqlNames.metadataIdColumnName}, ${_SqlNames.metadataValueColumnName}
@@ -230,7 +225,6 @@ FROM
   }
 
   Future<void> saveMetadata({required SquealerMetadata newMetadata}) async {
-    await _ensureTables();
     SquealerMetadata metadata;
     if (newMetadata.lastUsedVersion != null) {
       metadata = SquealerMetadata(

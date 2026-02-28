@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:io_file_picker_ui/io_file_picker_ui.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:squealer/core/constants.dart';
+import 'package:squealer/core/entities/database_meta_entities.dart';
 import 'package:squealer/core/init_setup.dart';
 import 'package:squealer/core/routes.dart';
 import 'package:squealer/cubit/global_settings_cubit.dart';
@@ -27,11 +28,28 @@ class _HomePageState extends State<HomePage> {
   final controller = TextEditingController();
   bool shouldUseCustomFilePicker = false;
 
+  Future<void> useTable({
+    required BuildContext buildContext,
+    required DatabaseInfo databaseInfo,
+  }) async {
+    if (buildContext.mounted) {
+      await buildContext.read<HomeCubit>().saveDatabaseToRecent(
+        databaseInfo: databaseInfo,
+      );
+    }
+    if (buildContext.mounted) {
+      buildContext.push(SquealerRouter.viewerPage, extra: databaseInfo);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) {
-        final homeCubit = HomeCubit(filePickerRepository: sl());
+        final homeCubit = HomeCubit(
+          filePickerRepository: sl(),
+          appDataRepo: sl(),
+        );
         if (widget.databaseContentUri != null) {
           Loggify.getLogger?.config(
             "Handling ${widget.databaseContentUri} in while creating HomeCubit",
@@ -82,11 +100,11 @@ class _HomePageState extends State<HomePage> {
                     child: BlocConsumer<HomeCubit, HomeState>(
                       listener: (context, state) async {
                         if (state case HomeDatabaseFilePicked(
-                          :final databaseFile,
+                          :final databaseInfo,
                         )) {
-                          context.push(
-                            SquealerRouter.viewerPage,
-                            extra: databaseFile,
+                          await useTable(
+                            buildContext: context,
+                            databaseInfo: databaseInfo,
                           );
                         }
                       },
@@ -95,12 +113,13 @@ class _HomePageState extends State<HomePage> {
                           case HomeInitial():
                           case HomeLoading():
                             return Center(child: CircularProgressIndicator());
-                          case HomeDatabaseFilePicked():
-                          case HomeLoaded():
+                          case HomeDatabaseFilePicked(:final recentDatabases):
+                          case HomeLoaded(:final recentDatabases):
                             return Center(
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
+                                  Spacer(flex: 4),
                                   if (Platform.isAndroid) ...[
                                     SwitchListTile(
                                       title: Text(
@@ -154,6 +173,65 @@ class _HomePageState extends State<HomePage> {
                                     label: Text("Pick SQLite file"),
                                     icon: Icon(Icons.file_open),
                                   ),
+                                  Spacer(flex: 2),
+                                  Visibility.maintain(
+                                    visible: recentDatabases.isNotEmpty,
+                                    child: SizedBox(
+                                      height:
+                                          MediaQuery.sizeOf(context).height *
+                                          0.2,
+                                      child: Badge(
+                                        backgroundColor: Theme.of(
+                                          context,
+                                        ).buttonTheme.colorScheme?.secondary,
+                                        textColor: Theme.of(
+                                          context,
+                                        ).buttonTheme.colorScheme?.onSecondary,
+                                        alignment: Alignment.topLeft,
+                                        label: Text("Recent databases"),
+                                        child: Card.outlined(
+                                          clipBehavior: Clip.hardEdge,
+                                          margin: EdgeInsets.all(8),
+                                          child: ListView.builder(
+                                            // shrinkWrap: true,
+                                            itemCount: recentDatabases.length,
+                                            itemBuilder: (context, index) {
+                                              final dbInfo =
+                                                  recentDatabases[index];
+                                              return ListTile(
+                                                onTap: () async {
+                                                  await useTable(
+                                                    buildContext: context,
+                                                    databaseInfo: dbInfo,
+                                                  );
+                                                },
+                                                title: Text(
+                                                  dbInfo
+                                                      .databaseUri
+                                                      .pathSegments
+                                                      .last,
+                                                ),
+                                                subtitle: Text(
+                                                  dbInfo.databaseUri.path,
+                                                ),
+                                                trailing: IconButton(
+                                                  onPressed: () async {
+                                                    context
+                                                        .read<HomeCubit>()
+                                                        .removeDatabaseFromRecent(
+                                                          databaseInfo: dbInfo,
+                                                        );
+                                                  },
+                                                  icon: Icon(Icons.close),
+                                                ),
+                                              );
+                                            },
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  // Spacer(flex: 1),
                                 ],
                               ),
                             );

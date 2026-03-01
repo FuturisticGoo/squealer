@@ -1,0 +1,4 @@
+Release चार (4)
+
+Show recent databases in home screen
+Save SQL statements in-app for easy use

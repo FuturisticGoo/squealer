@@ -173,13 +173,13 @@ class _HomePageState extends State<HomePage> {
                                     label: Text("Pick SQLite file"),
                                     icon: Icon(Icons.file_open),
                                   ),
-                                  Spacer(flex: 2),
+                                  Spacer(flex: 1),
                                   Visibility.maintain(
                                     visible: recentDatabases.isNotEmpty,
                                     child: SizedBox(
                                       height:
                                           MediaQuery.sizeOf(context).height *
-                                          0.2,
+                                          0.3,
                                       child: Badge(
                                         backgroundColor: Theme.of(
                                           context,

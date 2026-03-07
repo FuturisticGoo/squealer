@@ -1,5 +1,6 @@
 import 'package:fpdart/fpdart.dart';
 import 'package:futuristicgoo_utils/futuristicgoo_utils.dart';
+import 'package:squealer/core/cipher_sqlite_factory.dart';
 import 'package:squealer/core/entities/database_meta_entities.dart';
 import 'package:squealer/core/entities/database_data_entities.dart';
 import 'package:squealer/core/entities/failure_success.dart';
@@ -308,7 +309,7 @@ class SQLite3AsyncSQLiteSource {
   Future<SQLite3AsyncDatabaseObject> openDatabase({
     required String dbPath,
   }) async {
-    final db = SqliteDatabase(path: dbPath);
+    final db = SqliteDatabase.withFactory(CipherSqliteFactory(path: dbPath));
     await db.initialize();
     return SQLite3AsyncDatabaseObject(db: db);
   }

@@ -7,7 +7,7 @@ import Foundation
 
 import dynamic_color
 import file_picker
-import sqlite3_flutter_libs
+import sqlcipher_flutter_libs
 import uri_content
 
 func RegisterGeneratedPlugins(registry: FlutterPluginRegistry) {

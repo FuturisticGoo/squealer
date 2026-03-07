@@ -1,6 +1,7 @@
 import 'package:get_it/get_it.dart';
 import 'package:logging/logging.dart';
 import 'package:sqlite_async/sqlite_async.dart';
+import 'package:squealer/core/cipher_sqlite_factory.dart';
 import 'package:squealer/core/constants.dart';
 import 'package:futuristicgoo_utils/futuristicgoo_utils.dart';
 import 'package:squealer/data/app_data_repo.dart';
@@ -25,7 +26,7 @@ Future<void> initSetup() async {
   final appDir = await getAppPrivateDataDir(appName: appName);
   final dbPath = p.join(appDir, appDatabase);
   Loggify.getLogger?.fine("Opening database at $dbPath");
-  final db = SqliteDatabase(path: dbPath);
+  final db = SqliteDatabase.withFactory(CipherSqliteFactory(path: dbPath));
 
   sl.registerSingleton<FilePickerSource>(NativeFilePicker());
   final uriContent = UriContent();

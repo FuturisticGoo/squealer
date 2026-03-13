@@ -19,10 +19,29 @@ class DataBrowserLoaded extends DataBrowserState with EquatableMixin {
     required this.views,
   });
   @override
+  List<Object?> get props => [databaseObject, tables, views];
+}
+
+class QueryParams extends Equatable {
+  final String relationName;
+  final int? fromRowNumber;
+  final int limitRows;
+  final String? orderBy;
+  final bool? isDescendingOrder;
+  const QueryParams({
+    required this.relationName,
+    required this.fromRowNumber,
+    required this.limitRows,
+    required this.orderBy,
+    required this.isDescendingOrder,
+  });
+  @override
   List<Object?> get props => [
-    databaseObject,
-    tables,
-    views,
+    relationName,
+    fromRowNumber,
+    limitRows,
+    orderBy,
+    isDescendingOrder,
   ];
 }
 
@@ -30,6 +49,7 @@ class DataBrowserLoadedRelation extends DataBrowserLoaded {
   final String selectedRelation;
   final DatabaseQueryResult selectedRelationResult;
   final bool isLast;
+  final QueryParams queryParams;
   const DataBrowserLoadedRelation({
     required super.databaseObject,
     required super.tables,
@@ -37,6 +57,7 @@ class DataBrowserLoadedRelation extends DataBrowserLoaded {
     required this.selectedRelationResult,
     required this.selectedRelation,
     required this.isLast,
+    required this.queryParams,
   });
   @override
   List<Object?> get props => [
@@ -46,8 +67,10 @@ class DataBrowserLoadedRelation extends DataBrowserLoaded {
     selectedRelationResult,
     selectedRelation,
     isLast,
+    queryParams,
   ];
 }
+
 class DataBrowserError extends DataBrowserState with EquatableMixin {
   final Object error;
   final StackTrace? stackTrace;

@@ -6,8 +6,8 @@ import 'package:squealer/pages/viewer_widgets/loading_widget.dart';
 import 'package:trina_grid/trina_grid.dart';
 
 class DataBrowser extends StatefulWidget {
-  const DataBrowser({super.key});
-
+  const DataBrowser({super.key, required this.getForceUpdateSeed});
+  final int Function() getForceUpdateSeed;
   @override
   State<DataBrowser> createState() => _DataBrowserState();
 }
@@ -47,11 +47,7 @@ class _DataBrowserState extends State<DataBrowser>
                             leadingIcon: const Icon(Icons.search),
                             menuHeight: MediaQuery.heightOf(context) * 0.7,
                             requestFocusOnTap: true,
-                            // width: double.infinity,
                             expandedInsets: EdgeInsets.zero,
-                            // decoration: InputDecoration(
-                            //   border: OutlineInputBorder(),
-                            // ),
                             label: Text("Relation: "),
                             dropdownMenuEntries: [
                               ...tables.map((e) {
@@ -69,7 +65,7 @@ class _DataBrowserState extends State<DataBrowser>
                                 ),
                               ),
                             ],
-                            
+
                             onSelected: (value) async {
                               if (value != null) {
                                 await context
@@ -77,7 +73,7 @@ class _DataBrowserState extends State<DataBrowser>
                                     .showDataOfRelation(
                                       relationName: value,
                                       fromRowNumber: 1,
-                                      fetchCount: settings.rowFetchCount
+                                      fetchCount: settings.rowFetchCount,
                                     );
                               }
                             },
@@ -164,9 +160,14 @@ class _DataBrowserState extends State<DataBrowser>
                                     ? const TrinaGridConfiguration.dark()
                                     : const TrinaGridConfiguration(),
                                 key: Key(
-                                  selectedRelation,
+                                  "$selectedRelation-${widget.getForceUpdateSeed()}",
                                 ), // Required for TrinaGrid to
                                 // update on change
+                                // Added the force update seed to force it to 
+                                // fetch new ones when refresh button is clicked
+                                // but ong this is such a bad hack but I cant
+                                // find a better way with trina grid
+                                // :(
                                 columns: selectedRelationResult.columnNames.map(
                                   (col) {
                                     return TrinaColumn(
@@ -180,7 +181,6 @@ class _DataBrowserState extends State<DataBrowser>
                                 noRowsWidget: Center(
                                   child: Text("Empty relation"),
                                 ),
-                                // rows: [],
                               ),
                             ),
                           if (state is! DataBrowserLoadedRelation)

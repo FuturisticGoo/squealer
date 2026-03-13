@@ -64,6 +64,27 @@ class DataBrowserCubit extends Cubit<DataBrowserState> {
     }
   }
 
+  Future<void> refresh() async {
+    if (state
+        case DataBrowserLoadedRelation(
+          :final tables,
+          :final views,
+          :final queryParams,
+        )
+        when tables.contains(queryParams.relationName) ||
+            views.contains(queryParams.relationName)) {
+      // When refreshing, check if the previously selected table/view still
+      // exists (user may have dropped those).
+      // Also not passing the orderBy and isDescending because that column
+      // may have been deleted, so better safe than errory ;)
+      await showDataOfRelation(
+        relationName: queryParams.relationName,
+        fromRowNumber: queryParams.fromRowNumber,
+        fetchCount: queryParams.limitRows,
+      );
+    }
+  }
+
   Future<void> showDataOfRelation({
     required String relationName,
     int? fromRowNumber,
@@ -96,11 +117,19 @@ class DataBrowserCubit extends Cubit<DataBrowserState> {
               selectedRelationResult: dataQueryResult,
               selectedRelation: relationName,
               isLast: dataQueryResult.rows.length < fetchCount,
+              queryParams: QueryParams(
+                relationName: relationName,
+                fromRowNumber: fromRowNumber,
+                limitRows: fetchCount,
+                orderBy: orderBy,
+                isDescendingOrder: isDescendingOrder,
+              ),
             ),
           );
       }
     }
   }
+
   Future<void> exportData({required ExportFormat exportFormat}) async {
     if (state case DataBrowserLoadedRelation(
       :final databaseObject,
@@ -121,6 +150,4 @@ class DataBrowserCubit extends Cubit<DataBrowserState> {
       }
     }
   }
-
-
 }

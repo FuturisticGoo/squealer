@@ -19,6 +19,15 @@ import 'package:squealer/pages/viewer_widgets/query_result.dart';
 import 'package:squealer/pages/viewer_widgets/structure_listing.dart';
 import 'package:futuristicgoo_utils/futuristicgoo_utils.dart';
 
+enum _ViewerTabs {
+  structure(0),
+  data(1),
+  query(2);
+
+  const _ViewerTabs(this.tabIndex);
+  final int tabIndex;
+}
+
 class Viewer extends StatefulWidget {
   final DatabaseInfo databaseInfo;
   const Viewer({super.key, required this.databaseInfo});
@@ -31,9 +40,9 @@ class _ViewerState extends State<Viewer>
     with TickerProviderStateMixin, WidgetsBindingObserver {
   late final TabController _tabController;
   final _sqlQueryTextEditingController = TextEditingController();
-  bool isTabControllerListenerRegistered = false;
+  _ViewerTabs currentTab = _ViewerTabs.structure;
   ViewerCubit? _viewerCubit;
-
+  int forceUpdateDataBrowserSeed = DateTime.now().millisecondsSinceEpoch;
   @override
   Future<AppExitResponse> didRequestAppExit() async {
     await _viewerCubit?.closeDatabase();
@@ -43,7 +52,17 @@ class _ViewerState extends State<Viewer>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(
+      length: _ViewerTabs.values.length,
+      vsync: this,
+    );
+    _tabController.addListener(() {
+      setState(() {
+        currentTab = _ViewerTabs.values.singleWhere(
+          (element) => element.tabIndex == _tabController.index,
+        );
+      });
+    });
   }
 
   @override
@@ -85,6 +104,19 @@ class _ViewerState extends State<Viewer>
         child: Scaffold(
           appBar: AppBar(
             actions: [
+              if (currentTab == _ViewerTabs.data)
+                Builder(
+                  builder: (context) {
+                    return IconButton(
+                      onPressed: () async {
+                        forceUpdateDataBrowserSeed =
+                            DateTime.now().millisecondsSinceEpoch;
+                        await context.read<DataBrowserCubit>().refresh();
+                      },
+                      icon: Icon(Icons.refresh),
+                    );
+                  },
+                ),
               PopupMenuButton(
                 itemBuilder: (context) {
                   return [
@@ -97,7 +129,7 @@ class _ViewerState extends State<Viewer>
                         leading: Icon(Icons.settings),
                       ),
                     ),
-                    if (_tabController.index == 1)
+                    if (currentTab == _ViewerTabs.data)
                       PopupMenuItem(
                         enabled:
                             context.read<DataBrowserCubit>().state
@@ -120,7 +152,7 @@ class _ViewerState extends State<Viewer>
                           leading: Icon(Icons.ios_share),
                         ),
                       ),
-                    if (_tabController.index == 2)
+                    if (currentTab == _ViewerTabs.query)
                       PopupMenuItem(
                         enabled:
                             context.read<QueryResultCubit>().state
@@ -149,7 +181,7 @@ class _ViewerState extends State<Viewer>
                           leading: Icon(Icons.ios_share),
                         ),
                       ),
-                    if (_tabController.index == 2)
+                    if (currentTab == _ViewerTabs.query)
                       PopupMenuItem(
                         enabled:
                             context.read<QueryResultCubit>().state
@@ -162,7 +194,7 @@ class _ViewerState extends State<Viewer>
                           leading: Icon(Icons.ios_share),
                         ),
                       ),
-                    if (_tabController.index == 2)
+                    if (currentTab == _ViewerTabs.query)
                       PopupMenuItem(
                         enabled:
                             context.read<QueryResultCubit>().state
@@ -240,7 +272,10 @@ class _ViewerState extends State<Viewer>
                               controller: _tabController,
                               children: [
                                 StructureListing(),
-                                DataBrowser(),
+                                DataBrowser(
+                                  getForceUpdateSeed: () =>
+                                      forceUpdateDataBrowserSeed,
+                                ),
                                 QueryResult(
                                   queryTextEditingController:
                                       _sqlQueryTextEditingController,

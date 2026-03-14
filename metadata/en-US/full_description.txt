@@ -6,6 +6,7 @@ Features:
 <li>Show records from tables and views.</li>
 <li>Execute SQL queries</li>
 <li>Export to CSV, JSON and SQL</li>
+<li>Supports SQLCipher</li>
 </ul>
 
 Read and write commands are supported.

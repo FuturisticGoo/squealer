@@ -1,0 +1,7 @@
+Release അഞ്ച് (5)
+
+Added SQLCipher support (such security much wow)
+Saved SQL statements can now be named
+Ability to refresh relations in data browser
+Changed the home page UI (it looks much worse now but has more stuff :) 
+Internally, it uses sqlcipher library now instead of the normal one

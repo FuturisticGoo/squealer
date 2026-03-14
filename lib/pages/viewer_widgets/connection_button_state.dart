@@ -7,7 +7,7 @@ sealed class ButtonState {
   const ButtonState();
   static List<ButtonState> get values => [
     PickState(),
-    CreateState(),
+    // CreateState(), // Will do in later version
     ConnectState(dbInfo: null),
   ];
 }

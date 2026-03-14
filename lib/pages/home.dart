@@ -119,7 +119,7 @@ class _HomePageState extends State<HomePage> {
           appDataRepo: sl(),
         );
         if (widget.databaseContentUri != null) {
-          // TODO: this doesnt work that well, fix it
+          // TODO: this doesnt work, fix it
           Loggify.getLogger?.config(
             "Handling ${widget.databaseContentUri} while creating HomeCubit",
           );

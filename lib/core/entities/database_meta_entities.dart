@@ -29,7 +29,9 @@ sealed class DatabaseInfo extends Equatable {
   Map<String, dynamic> toJson();
   factory DatabaseInfo.fromJson(Map<String, dynamic> json) {
     final typeString = json["type"];
-    if (typeString == (SQLiteDatabaseInfo).toString()) {
+    if (typeString == (SQLiteCipherDatabaseInfo).toString()) {
+      return SQLiteCipherDatabaseInfo.fromJson(json);
+    } else if (typeString == (SQLiteDatabaseInfo).toString()) {
       return SQLiteDatabaseInfo.fromJson(json);
     } else {
       throw TypeError();
@@ -47,6 +49,25 @@ class SQLiteDatabaseInfo extends DatabaseInfo {
   Map<String, dynamic> toJson() => _$SQLiteDatabaseInfoToJson(this);
   factory SQLiteDatabaseInfo.fromJson(Map<String, dynamic> json) =>
       _$SQLiteDatabaseInfoFromJson(json);
+}
+
+enum SecretType { passphrase, keyHexDigest }
+
+@JsonSerializable(converters: [SemVerJsonConverter()])
+class SQLiteCipherDatabaseInfo extends SQLiteDatabaseInfo {
+  @override
+  SemVer get version => SemVer.fromString("0.0.1");
+  final SecretType secretType;
+  final String secret;
+  const SQLiteCipherDatabaseInfo({
+    required super.databaseUri,
+    required this.secret,
+    required this.secretType,
+  });
+  @override
+  Map<String, dynamic> toJson() => _$SQLiteCipherDatabaseInfoToJson(this);
+  factory SQLiteCipherDatabaseInfo.fromJson(Map<String, dynamic> json) =>
+      _$SQLiteCipherDatabaseInfoFromJson(json);
 }
 
 sealed class DatabaseObject with EquatableMixin {

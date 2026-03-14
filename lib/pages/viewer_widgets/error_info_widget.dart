@@ -13,21 +13,24 @@ class ErrorInfoWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Text(
-            errorText,
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              color: Theme.of(context).colorScheme.error,
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Text(
+              errorText,
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                color: Theme.of(context).colorScheme.error,
+              ),
             ),
-          ),
-          Text(failure.toString()),
-          if (failure case GenericFailure(:final error)) Text(error.toString()),
-          if (failure case GenericFailure(:final stackTrace))
-            Text(stackTrace.toString()),
-        ],
+            Text(failure.toString()),
+            if (failure case GenericFailure(:final error))
+              Text(error.toString()),
+            if (failure case GenericFailure(:final stackTrace))
+              Text(stackTrace.toString()),
+          ],
+        ),
       ),
     );
   }

@@ -16,7 +16,7 @@ class SQLiteViewerRepo implements ViewerRepo {
   }) async {
     try {
       final dbObject = await sqLite3AsyncSQLiteSource.openDatabase(
-        dbPath: databaseInfo.databaseUri.toFilePath(),
+        sqliteDatabaseInfo: databaseInfo,
       );
       return Either.right(dbObject);
     } catch (error, stackTrace) {
@@ -307,9 +307,31 @@ class SQLite3AsyncSQLiteSource {
   const SQLite3AsyncSQLiteSource();
 
   Future<SQLite3AsyncDatabaseObject> openDatabase({
-    required String dbPath,
+    required SQLiteDatabaseInfo sqliteDatabaseInfo,
   }) async {
-    final db = SqliteDatabase.withFactory(CipherSqliteFactory(path: dbPath));
+    SqliteDatabase db;
+    if (sqliteDatabaseInfo case SQLiteCipherDatabaseInfo(
+      :final secret,
+      :final secretType,
+    )) {
+      final String pragmaToExecute;
+      switch (secretType) {
+        case SecretType.passphrase:
+          pragmaToExecute = "PRAGMA key='$secret'";
+        case SecretType.keyHexDigest:
+          pragmaToExecute = """PRAGMA key="x'$secret'" """;
+      }
+      db = SqliteDatabase.withFactory(
+        CipherSqliteFactory(
+          path: sqliteDatabaseInfo.databaseUri.toFilePath(),
+          pragmaToExecute: pragmaToExecute,
+        ),
+      );
+    } else {
+      db = SqliteDatabase.withFactory(
+        CipherSqliteFactory(path: sqliteDatabaseInfo.databaseUri.toFilePath()),
+      );
+    }
     await db.initialize();
     return SQLite3AsyncDatabaseObject(db: db);
   }

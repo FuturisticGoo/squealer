@@ -12,7 +12,7 @@ class QueryResultLoading extends QueryResultState {}
 
 class QueryResultDatabaseLoaded extends QueryResultState {
   final DatabaseObject databaseObject;
-  final List<String> savedStatements;
+  final List<SavedStatement> savedStatements;
   const QueryResultDatabaseLoaded({
     required this.databaseObject,
     required this.savedStatements,
@@ -20,7 +20,7 @@ class QueryResultDatabaseLoaded extends QueryResultState {
   @override
   List<Object?> get props => [databaseObject, savedStatements];
   QueryResultDatabaseLoaded updateSavedStatements(
-    List<String> newSavedStatments,
+    List<SavedStatement> newSavedStatments,
   ) {
     switch (this) {
       case QueryResultExecuting(:final databaseObject):

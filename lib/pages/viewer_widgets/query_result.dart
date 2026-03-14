@@ -69,7 +69,9 @@ class _QueryResultState extends State<QueryResult>
                     dropdownMenuEntries: savedStatements.map((statement) {
                       return DropdownMenuEntry(
                         value: statement,
-                        label: statement,
+                        label: "${statement.name}: ${statement.statement}",
+                        labelWidget: Text(statement.statement),
+                        leadingIcon: Text(statement.name),
                         trailingIcon: IconButton(
                           onPressed: () async {
                             await context
@@ -78,42 +80,16 @@ class _QueryResultState extends State<QueryResult>
                           },
                           icon: Icon(Icons.close),
                         ),
-                        // leadingIcon: Text("Table"),
                       );
                     }).toList(),
 
                     onSelected: (value) async {
                       if (value != null) {
-                        widget.queryTextEditingController.text = value;
+                        widget.queryTextEditingController.text =
+                            value.statement;
                       }
                     },
                   ),
-                  // TextFormField(
-                  //   controller: _queryTextEditingController,
-                  //   minLines: 1,
-                  //   maxLines: 5,
-                  //   decoration: InputDecoration(
-                  //     border: OutlineInputBorder(),
-                  //     label: Text("Query"),
-                  //     suffixIcon: Padding(
-                  //       padding: const EdgeInsets.all(8.0),
-                  //       child: IconButton(
-                  //         onPressed: () async {
-                  //           if (_queryTextEditingController.text
-                  //               .trim()
-                  //               .isNotEmpty) {
-                  //             await context
-                  //                 .read<QueryResultCubit>()
-                  //                 .executeQuery(
-                  //                   sqlQuery: _queryTextEditingController.text,
-                  //                 );
-                  //           }
-                  //         },
-                  //         icon: Icon(Icons.send),
-                  //       ),
-                  //     ),
-                  //   ),
-                  // ),
                   SizedBox(height: 20),
                   switch (state) {
                     QueryResultExecuting() => LoadingWidget(

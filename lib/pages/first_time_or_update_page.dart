@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:futuristicgoo_utils/futuristicgoo_utils.dart';
 import 'package:go_router/go_router.dart';
 import 'package:squealer/core/constants.dart';
+import 'package:squealer/core/init_setup.dart';
 import 'package:squealer/core/routes.dart';
 import 'package:squealer/cubit/global_settings_cubit.dart';
+import 'package:squealer/data/app_data_source.dart';
 import 'package:squealer/pages/viewer_widgets/error_info_widget.dart';
 import 'package:squealer/pages/viewer_widgets/loading_widget.dart';
 
@@ -51,12 +54,22 @@ class _FirstTimeOrUpdatePageState extends State<FirstTimeOrUpdatePage> {
                 });
               }
               return LoadingWidget(loadingText: "Settings up everything...");
-            case GlobalSettingsLoaded():
+            case GlobalSettingsLoaded(:final metadata):
               // When the app is updated.
               // Nothing to do as of now, but may be required later.
               if (!updateCallbackRegistered) {
                 updateCallbackRegistered = true;
                 WidgetsBinding.instance.addPostFrameCallback((_) async {
+                  if (context.mounted) {
+                    await sl<AppDataSourceSQLite>().migrate(
+                      fromVersion:
+                          metadata.lastUsedVersion ??
+                          SemVer.fromString(
+                            "0.1.1",
+                          ), // Assume it's that old and decrepit
+                      toVersion: appVersion,
+                    );
+                  }
                   if (context.mounted) {
                     await context
                         .read<GlobalSettingsCubit>()

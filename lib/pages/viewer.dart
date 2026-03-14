@@ -14,6 +14,7 @@ import 'package:squealer/cubit/viewer_cubit.dart';
 import 'package:squealer/pages/viewer_widgets/data_browser.dart';
 import 'package:squealer/pages/viewer_widgets/error_info_widget.dart';
 import 'package:squealer/pages/viewer_widgets/export_dialog.dart';
+import 'package:squealer/pages/viewer_widgets/new_statement_dialog.dart';
 import 'package:squealer/pages/viewer_widgets/progress_dialog.dart';
 import 'package:squealer/pages/viewer_widgets/query_result.dart';
 import 'package:squealer/pages/viewer_widgets/structure_listing.dart';
@@ -111,6 +112,10 @@ class _ViewerState extends State<Viewer>
                       onPressed: () async {
                         forceUpdateDataBrowserSeed =
                             DateTime.now().millisecondsSinceEpoch;
+                        // We could just setState and set the above, which will
+                        // force a refresh. But if a column is dropped from
+                        // a table, it will still be requested, which will
+                        // result in a null error. So force a refresh here too.
                         await context.read<DataBrowserCubit>().refresh();
                       },
                       icon: Icon(Icons.refresh),
@@ -200,13 +205,22 @@ class _ViewerState extends State<Viewer>
                             context.read<QueryResultCubit>().state
                                 is QueryResultDatabaseLoaded,
                         onTap: () async {
+                          final dialogResult = await showNewStatementDialog(
+                            context,
+                            initialStatement:
+                                _sqlQueryTextEditingController.text,
+                          );
+                          if (context.mounted && dialogResult != null) {
+
                           await context
                               .read<QueryResultCubit>()
                               .saveSQLStatement(
-                                statement: _sqlQueryTextEditingController.text,
+                                  name: dialogResult.$1,
+                                  statement: dialogResult.$2,
                               );
                           if (context.mounted) {
                             showSnackBar(context, text: "Saved statement");
+                          }
                           }
                         },
                         child: ListTile(

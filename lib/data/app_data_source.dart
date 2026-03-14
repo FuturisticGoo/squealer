@@ -5,6 +5,7 @@ import 'package:futuristicgoo_utils/futuristicgoo_utils.dart';
 import 'package:sqlite_async/sqlite_async.dart';
 import 'package:squealer/core/entities/database_meta_entities.dart';
 import 'package:squealer/core/entities/failure_success.dart';
+import 'package:squealer/core/entities/saved_statements.dart';
 import 'package:squealer/data/app_data_repo.dart';
 
 class AppDataRepoImpl implements AppDataRepo {
@@ -27,7 +28,7 @@ class AppDataRepoImpl implements AppDataRepo {
   }
 
   @override
-  Future<Either<Failure, List<String>>> getSavedSQLStatements() async {
+  Future<Either<Failure, List<SavedStatement>>> getSavedSQLStatements() async {
     try {
       final savedStatements = await appDataSourceSQLite.getSavedSQLStatements();
       return Either.right(savedStatements);
@@ -62,10 +63,10 @@ class AppDataRepoImpl implements AppDataRepo {
 
   @override
   Future<Either<Failure, Success>> removeSQLStatement({
-    required String? sqlStatement,
+    required SavedStatement? savedStatement,
   }) async {
     try {
-      await appDataSourceSQLite.deleteStatement(statement: sqlStatement);
+      await appDataSourceSQLite.deleteStatement(savedStatement: savedStatement);
       return Either.right(Success());
     } catch (error, stackTrace) {
       Loggify.getLogger?.severe(
@@ -98,10 +99,11 @@ class AppDataRepoImpl implements AppDataRepo {
 
   @override
   Future<Either<Failure, Success>> saveSQLStatement({
-    required String sqlStatement,
+    required String name,
+    required String statement,
   }) async {
     try {
-      await appDataSourceSQLite.saveStatement(statement: sqlStatement);
+      await appDataSourceSQLite.saveStatement(name: name, statement: statement);
       return Either.right(Success());
     } catch (error, stackTrace) {
       Loggify.getLogger?.severe(
@@ -118,6 +120,28 @@ class AppDataSourceSQLite {
   final SqliteDatabase db;
   AppDataSourceSQLite({required this.db});
 
+  Future<void> migrate({
+    required SemVer fromVersion,
+    required SemVer toVersion,
+  }) async {
+    Loggify.getLogger?.info(
+      "Migrating from $fromVersion to $toVersion in $AppDataSourceSQLite",
+    );
+    if (fromVersion < SemVer.fromString("0.1.4") &&
+        toVersion >= SemVer.fromString("0.1.4")) {
+      await _migrateAddNameColumn();
+    }
+  }
+
+  Future<void> _migrateAddNameColumn() async {
+    await db.execute(""" 
+ALTER TABLE 
+  ${_SQLNames.savedSQLStatementsTable}
+ADD COLUMN
+  ${_SQLNames.statementNameColumnName} TEXT NOT NULL DEFAULT ''
+    """);
+  }
+
   Future<void> ensureTables() async {
     await db.execute("""
 CREATE TABLE IF NOT EXISTS 
@@ -130,6 +154,7 @@ CREATE TABLE IF NOT EXISTS
 CREATE TABLE IF NOT EXISTS 
   ${_SQLNames.savedSQLStatementsTable} 
 (
+  ${_SQLNames.statementNameColumnName} TEXT NOT NULL,
   ${_SQLNames.statementColumnName} TEXT NOT NULL
 )
 """);
@@ -186,41 +211,52 @@ DELETE FROM
     }
   }
 
-  Future<List<String>> getSavedSQLStatements() async {
+  Future<List<SavedStatement>> getSavedSQLStatements() async {
     final savedSQLStatementsResult = await db.getAll(""" 
 SELECT 
-  ${_SQLNames.statementColumnName}
+  rowid, ${_SQLNames.statementNameColumnName}, ${_SQLNames.statementColumnName}
 FROM
   ${_SQLNames.savedSQLStatementsTable}
     """);
     return savedSQLStatementsResult
-        .map((row) => row[_SQLNames.statementColumnName] as String)
+        .map(
+          (row) => SavedStatement(
+            id: row["rowid"] as int,
+            name: row[_SQLNames.statementNameColumnName] as String,
+            statement: row[_SQLNames.statementColumnName] as String,
+          ),
+        )
         .toList();
   }
 
-  Future<void> saveStatement({required String statement}) async {
+  Future<void> saveStatement({
+    required String name,
+    required String statement,
+  }) async {
     await db.execute(
       """ 
 INSERT INTO
   ${_SQLNames.savedSQLStatementsTable}
-  (${_SQLNames.statementColumnName})
+  (${_SQLNames.statementNameColumnName}, ${_SQLNames.statementColumnName})
 VALUES
-  (?)
+  (?, ?)
     """,
-      [statement],
+      [name, statement],
     );
   }
 
-  Future<void> deleteStatement({required String? statement}) async {
-    if (statement != null) {
+  Future<void> deleteStatement({
+    required SavedStatement? savedStatement,
+  }) async {
+    if (savedStatement != null) {
       await db.execute(
         """ 
 DELETE FROM
   ${_SQLNames.savedSQLStatementsTable}
 WHERE
-  ${_SQLNames.statementColumnName}=?
+  rowid=?
     """,
-        [statement],
+        [savedStatement.id],
       );
     } else {
       await db.execute(""" 
@@ -236,5 +272,6 @@ abstract final class _SQLNames {
   static const databaseInfoJsonColumnName = "database_info_json";
 
   static const savedSQLStatementsTable = "saved_sql_statements";
+  static const statementNameColumnName = "name";
   static const statementColumnName = "statement";
 }

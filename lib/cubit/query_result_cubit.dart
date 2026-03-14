@@ -5,6 +5,7 @@ import 'package:squealer/core/entities/database_data_entities.dart';
 import 'package:squealer/core/entities/database_meta_entities.dart';
 import 'package:squealer/core/entities/export_format.dart';
 import 'package:squealer/core/entities/failure_success.dart';
+import 'package:squealer/core/entities/saved_statements.dart';
 import 'package:squealer/data/app_data_repo.dart';
 import 'package:squealer/data/exporter_repo.dart';
 import 'package:squealer/data/viewer_repo.dart';
@@ -54,7 +55,7 @@ class QueryResultCubit extends Cubit<QueryResultState> {
     final localState = state;
     if (localState case QueryResultDatabaseLoaded()) {
       final savedStatementsResult = await appDataRepo.getSavedSQLStatements();
-      final List<String> savedStatements;
+      final List<SavedStatement> savedStatements;
       switch (savedStatementsResult) {
         case Left():
           savedStatements = [];
@@ -65,13 +66,16 @@ class QueryResultCubit extends Cubit<QueryResultState> {
     }
   }
 
-  Future<void> saveSQLStatement({required String statement}) async {
-    await appDataRepo.saveSQLStatement(sqlStatement: statement);
+  Future<void> saveSQLStatement({
+    required String name,
+    required String statement,
+  }) async {
+    await appDataRepo.saveSQLStatement(name: name, statement: statement);
     await _loadSQLStatements();
   }
 
-  Future<void> removeSQLStatement({required String statement}) async {
-    await appDataRepo.removeSQLStatement(sqlStatement: statement);
+  Future<void> removeSQLStatement({required SavedStatement statement}) async {
+    await appDataRepo.removeSQLStatement(savedStatement: statement);
     await _loadSQLStatements();
   }
 

@@ -1,6 +1,7 @@
 import 'package:fpdart/fpdart.dart';
 import 'package:squealer/core/entities/database_meta_entities.dart';
 import 'package:squealer/core/entities/failure_success.dart';
+import 'package:squealer/core/entities/saved_statements.dart';
 
 abstract class AppDataRepo {
   Future<Either<Failure, List<DatabaseInfo>>> getRecentDatabases();
@@ -11,11 +12,12 @@ abstract class AppDataRepo {
     required DatabaseInfo? databaseInfo,
   });
 
-  Future<Either<Failure, List<String>>> getSavedSQLStatements();
+  Future<Either<Failure, List<SavedStatement>>> getSavedSQLStatements();
   Future<Either<Failure, Success>> saveSQLStatement({
-    required String sqlStatement,
+    required String name,
+    required String statement,
   });
   Future<Either<Failure, Success>> removeSQLStatement({
-    required String? sqlStatement,
+    required SavedStatement? savedStatement,
   });
 }
